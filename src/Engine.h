@@ -6,7 +6,6 @@
 #include <string>
 
 
-
 namespace willengine
 {
 	class Engine
@@ -28,7 +27,7 @@ namespace willengine
 
 		void Startup(Config config);
 		void Shutdown();
-		void RunGameLoop(void(*update)());
+		void RunGameLoop(const UpdateCallback& callback);
 
 		GraphicsManager* graphics;
 		InputManager* input;

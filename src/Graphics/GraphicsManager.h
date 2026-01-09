@@ -9,6 +9,8 @@ namespace willengine
 
 	class GraphicsManager
 	{
+		friend class InputManager;
+
 	public:
 		GraphicsManager(Engine* engine);
 		~GraphicsManager();
@@ -16,8 +18,11 @@ namespace willengine
 		void Startup(Engine::Config config);
 		void Shutdown();
 		void Draw();
+		bool ShouldQuit();
 
 	private:
 		Engine* engine;
+		GLFWwindow* window;
+
 	};
 }

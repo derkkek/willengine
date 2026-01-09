@@ -19,7 +19,7 @@ namespace willengine
 		// We don't want GLFW to set up a graphics API.
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		// Create the window.
-		GLFWwindow* window = glfwCreateWindow(config.window_width, config.window_height, config.window_name.c_str(), config.window_fullscreen ? glfwGetPrimaryMonitor() : 0, 0);
+		window = glfwCreateWindow(config.window_width, config.window_height, config.window_name.c_str(), config.window_fullscreen ? glfwGetPrimaryMonitor() : 0, 0);
 		if (!window)
 		{
 			spdlog::error("window initialization has been failed.");
@@ -35,5 +35,9 @@ namespace willengine
 	void GraphicsManager::Draw()
 	{
 
+	}
+	bool GraphicsManager::ShouldQuit()
+	{
+		return glfwWindowShouldClose(window);
 	}
 }

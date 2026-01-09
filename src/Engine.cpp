@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "Graphics/GraphicsManager.h"
 #include "Input/InputManager.h"
+#include <iostream>
 
 namespace willengine
 {
@@ -24,21 +25,21 @@ namespace willengine
 		running = true;
 	}
 
-	void Engine::RunGameLoop(void(*UpdateCallback)())
+	void Engine::RunGameLoop(const UpdateCallback& callback)
 	{
 
 					
 		double now = glfwGetTime();
-		double timePerExecution = 1000 / 60000;
+		double timePerExecution = 1.0 / 60.0;
 		double lastTick = now - timePerExecution;
 
-		while (running)
+		while (running && !graphics->ShouldQuit())
 		{
 			now = glfwGetTime();
 			while (now >= lastTick + timePerExecution)
 			{
-				//input update;
-				UpdateCallback();
+				input->Update();
+				callback();
 				lastTick += timePerExecution;
 			}
 
