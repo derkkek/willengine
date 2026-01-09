@@ -32,7 +32,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable( spdlog )
 
 ## Declare the engine library
-add_library( willengine STATIC src/Engine.cpp "src/Input/InputManager.cpp" "src/Graphics/GraphicsManager.cpp")
+add_library( willengine STATIC src/Engine.cpp "src/Input/InputManager.cpp" "src/Graphics/GraphicsManager.cpp" "src/ResourceManager/ResourceManager.cpp")
 set_target_properties( willengine PROPERTIES CXX_STANDARD 20 )
 
 ## Declare our engine's header path
