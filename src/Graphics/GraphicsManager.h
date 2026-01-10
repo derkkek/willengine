@@ -1,5 +1,7 @@
 #pragma once
 #include "../Engine.h"
+#include <webgpu/webgpu.h>
+#include <glfw3webgpu.h>
 
 namespace willengine
 {
@@ -23,6 +25,11 @@ namespace willengine
 	private:
 		Engine* engine;
 		GLFWwindow* window;
-
+		WGPUInstance instance;
+		WGPUSurface surface;
+		WGPUAdapter adapter;
+		WGPUQueue queue;
+		WGPUDevice device;
+		WGPUShaderModule shader_module;
 	};
 }
