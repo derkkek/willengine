@@ -32,7 +32,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable( spdlog )
 
 ## Can change `dawn` to `wgpu`
-set(WEBGPU_BACKEND "dawn" CACHE STRING "WebGPU backend (wgpu or dawn)")
+set(WEBGPU_BACKEND "wgpu" CACHE STRING "WebGPU backend (wgpu or dawn)")
 FetchContent_Declare(
   webgpu
   GIT_REPOSITORY https://github.com/yig/WebGPU-distribution
@@ -60,8 +60,20 @@ FetchContent_Declare(
     )
 FetchContent_MakeAvailable( glm )
 
+FetchContent_Declare(
+  stb
+  GIT_REPOSITORY https://github.com/nothings/stb/
+  GIT_TAG        f58f558c120e9b32c217290b80bad1a0729fbb2c
+  GIT_SHALLOW FALSE
+  GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable( stb )
+## stb doesn't have a `CMakeLists.txt`. Let's declare a header-only library with an include path.
+add_library( stb INTERFACE )
+target_include_directories( stb INTERFACE ${stb_SOURCE_DIR} )
+
 ## Declare the engine library
-add_library( willengine STATIC src/Engine.cpp "src/Input/InputManager.cpp" "src/Graphics/GraphicsManager.cpp")
+add_library( willengine STATIC src/Engine.cpp "src/Input/InputManager.cpp" "src/Graphics/GraphicsManager.cpp" "src/ResourceManager/ResourceManager.cpp")
 set_target_properties( willengine PROPERTIES CXX_STANDARD 20 )
 
 ## Declare our engine's header path
@@ -72,6 +84,7 @@ target_link_libraries( willengine PRIVATE spdlog::spdlog )
 target_link_libraries( willengine PUBLIC webgpu)
 target_link_libraries( willengine PUBLIC glfw3webgpu)
 target_link_libraries( willengine PUBLIC glm::glm)
+target_link_libraries( willengine PUBLIC stb)
 
 add_executable( helloworld demo/helloworld.cpp)
 set_target_properties( helloworld PROPERTIES CXX_STANDARD 20 )

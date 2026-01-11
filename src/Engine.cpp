@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "Graphics/GraphicsManager.h"
 #include "Input/InputManager.h"
+#include "ResourceManager/ResourceManager.h"
 #include <iostream>
 
 namespace willengine
@@ -8,6 +9,7 @@ namespace willengine
 	Engine::Engine()
 		: graphics(new GraphicsManager(this)), 
 		  input(new InputManager(this)),
+		  resource(new ResourceManager(this)),
 		  running(false)
 	{
 	}
@@ -16,6 +18,7 @@ namespace willengine
 	{
 		delete graphics;
 		delete input;
+		delete resource;
 	}
 
 	void Engine::Startup(Config config)
@@ -43,7 +46,7 @@ namespace willengine
 				lastTick += timePerExecution;
 			}
 
-			graphics->Draw();
+			//graphics->Draw();  // Clears screen; sprites should be drawn in callback
 
 		}
 	}

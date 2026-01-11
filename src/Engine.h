@@ -31,6 +31,7 @@ namespace willengine
 
 		GraphicsManager* graphics;
 		InputManager* input;
+		ResourceManager* resource;
 
 	private:
 		bool running;

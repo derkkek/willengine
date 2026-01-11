@@ -1,17 +1,21 @@
 #include "ResourceManager.h"
 #include <string>
-
-ResourceManager::ResourceManager()
-	:rootPath("assets")
+#include "../Engine.h"
+namespace willengine
 {
-}
+	ResourceManager::ResourceManager(Engine* engine)
+		:rootPath("assets"), engine(engine)
+	{
+	}
 
-std::string ResourceManager::ResolvePath(std::string& relativePath)
-{
-	return (rootPath / relativePath).string();
-}
+	std::string ResourceManager::ResolvePath(const std::string& relativePath)
+	{
+		return (rootPath / relativePath).string();
+	}
 
-void ResourceManager::SetRootPath(std::string& rootPath)
-{
-	this->rootPath = rootPath;
+	void ResourceManager::SetRootPath(const std::string& rootPath)
+	{
+		this->rootPath = rootPath;
+	}
+
 }

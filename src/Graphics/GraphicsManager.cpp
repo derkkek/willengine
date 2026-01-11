@@ -1,6 +1,11 @@
 ﻿#include "GraphicsManager.h"
 #include "../Engine.h"
+#include "../ResourceManager/ResourceManager.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <iostream>
+#include <algorithm>
 #include <spdlog/spdlog.h>
 #include <webgpu/webgpu.h>
 #include <glfw3webgpu.h>
@@ -22,7 +27,8 @@ namespace willengine
 	template< typename T > constexpr const T* to_ptr(const T& val) { return &val; }
 	template< typename T, std::size_t N > constexpr const T* to_ptr(const T(&& arr)[N]) { return arr; }
 
-	GraphicsManager::GraphicsManager(Engine* engine) : engine(engine)
+	GraphicsManager::GraphicsManager(Engine* engine) : engine(engine), 
+		instance_buffer(nullptr), instance_buffer_capacity(0)
 	{
 	}
 
@@ -121,7 +127,7 @@ namespace willengine
 		  {  1.0f,   1.0f,    1.0f,  0.0f },
 		};
 
-		WGPUBuffer vertex_buffer = wgpuDeviceCreateBuffer(device, to_ptr(WGPUBufferDescriptor{
+		vertex_buffer = wgpuDeviceCreateBuffer(device, to_ptr(WGPUBufferDescriptor{
 	.label = WGPUStringView("Vertex Buffer", WGPU_STRLEN),
 	.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex,
 	.size = sizeof(vertices)
@@ -140,13 +146,13 @@ namespace willengine
 			.presentMode = WGPUPresentMode_Fifo // Explicitly set this because of a Dawn bug
 			}));
 
-		WGPUBuffer uniform_buffer = wgpuDeviceCreateBuffer(device, to_ptr(WGPUBufferDescriptor{
+		uniform_buffer = wgpuDeviceCreateBuffer(device, to_ptr(WGPUBufferDescriptor{
 	.label = WGPUStringView("Uniform Buffer", WGPU_STRLEN),
 	.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Uniform,
 	.size = sizeof(Uniforms)
 			}));
 
-		WGPUSampler sampler = wgpuDeviceCreateSampler(device, to_ptr(WGPUSamplerDescriptor{
+		sampler = wgpuDeviceCreateSampler(device, to_ptr(WGPUSamplerDescriptor{
 	.addressModeU = WGPUAddressMode_ClampToEdge,
 	.addressModeV = WGPUAddressMode_ClampToEdge,
 	.magFilter = WGPUFilterMode_Linear,
@@ -198,7 +204,7 @@ namespace willengine
 		shader_desc.nextInChain = &source_desc.chain;
 		shader_module = wgpuDeviceCreateShaderModule(device, &shader_desc);
 
-		WGPURenderPipeline pipeline = wgpuDeviceCreateRenderPipeline(device, to_ptr(WGPURenderPipelineDescriptor{
+		pipeline = wgpuDeviceCreateRenderPipeline(device, to_ptr(WGPURenderPipelineDescriptor{
 
 			// Describe the vertex shader inputs
 			.vertex = {
@@ -294,24 +300,256 @@ namespace willengine
 					}})
 				})
 			}));
+
+		// Compute and upload the projection matrix
+		Uniforms uniforms;
+		uniforms.projection = mat4{1};
+		uniforms.projection[0][0] = uniforms.projection[1][1] = 1./100.;
+		
+		glfwGetFramebufferSize(window, &width, &height);
+		if( width < height ) {
+			uniforms.projection[1][1] *= float(width);
+			uniforms.projection[1][1] /= float(height);
+		} else {
+			uniforms.projection[0][0] *= float(height);
+			uniforms.projection[0][0] /= float(width);
+		}
+		
+		wgpuQueueWriteBuffer(queue, uniform_buffer, 0, &uniforms, sizeof(Uniforms));
 	}
 
 	void GraphicsManager::Shutdown()
 	{
-		glfwTerminate();
-		wgpuInstanceRelease(instance);
-		wgpuSurfaceRelease(surface);
-		wgpuAdapterRelease(adapter);
-		wgpuDeviceRelease(device);
-		wgpuQueueRelease(queue);
+		// Release textures
+		for (auto& pair : texturesMap) {
+			if (pair.second.texture) wgpuTextureRelease(pair.second.texture);
+			if (pair.second.bindGroup) wgpuBindGroupRelease(pair.second.bindGroup);
+		}
+		texturesMap.clear();
+		
+		if (instance_buffer) wgpuBufferRelease(instance_buffer);
+		wgpuBufferRelease(vertex_buffer);
+		wgpuBufferRelease(uniform_buffer);
+		wgpuSamplerRelease(sampler);
+		wgpuRenderPipelineRelease(pipeline);
 		wgpuShaderModuleRelease(shader_module);
+		wgpuQueueRelease(queue);
+		wgpuDeviceRelease(device);
+		wgpuAdapterRelease(adapter);
+		wgpuSurfaceRelease(surface);
+		wgpuInstanceRelease(instance);
+		glfwTerminate();
 	}
+	void GraphicsManager::Draw(const std::vector<Sprite>& sprites_input)
+	{
+		// If no sprites, just clear the screen
+		if (sprites_input.empty()) {
+			WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(device, nullptr);
+			WGPUSurfaceTexture surface_texture{};
+			wgpuSurfaceGetCurrentTexture(surface, &surface_texture);
+			WGPUTextureView current_texture_view = wgpuTextureCreateView(surface_texture.texture, nullptr);
+			WGPURenderPassEncoder render_pass = wgpuCommandEncoderBeginRenderPass(encoder, to_ptr<WGPURenderPassDescriptor>({
+				.colorAttachmentCount = 1,
+				.colorAttachments = to_ptr<WGPURenderPassColorAttachment>({{
+					.view = current_texture_view,
+					.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
+					.loadOp = WGPULoadOp_Clear,
+					.storeOp = WGPUStoreOp_Store,
+					.clearValue = WGPUColor{ red, green, blue, 1.0 }
+					}})
+				}));
+			wgpuRenderPassEncoderEnd(render_pass);
+			WGPUCommandBuffer command_buffer = wgpuCommandEncoderFinish(encoder, nullptr);
+			wgpuQueueSubmit(queue, 1, &command_buffer);
+			wgpuSurfacePresent(surface);
+			
+			wgpuTextureViewRelease(current_texture_view);
+			wgpuTextureRelease(surface_texture.texture);
+			wgpuRenderPassEncoderRelease(render_pass);
+			wgpuCommandBufferRelease(command_buffer);
+			wgpuCommandEncoderRelease(encoder);
+			return;
+		}
+
+		// Sort sprites back-to-front (higher z first)
+		auto sprites = sprites_input;
+		std::sort(sprites.begin(), sprites.end(), 
+			[](const Sprite& lhs, const Sprite& rhs) { return lhs.position.z > rhs.position.z; });
+
+		// Allocate/reallocate instance buffer if needed
+		if (instance_buffer_capacity < sprites.size()) {
+			if (instance_buffer) wgpuBufferRelease(instance_buffer);
+			instance_buffer_capacity = sprites.size();
+			instance_buffer = wgpuDeviceCreateBuffer(device, to_ptr(WGPUBufferDescriptor{
+				.label = WGPUStringView("Instance Buffer", WGPU_STRLEN),
+				.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex,
+				.size = sizeof(InstanceData) * instance_buffer_capacity
+				}));
+		}
+
+		// Create command encoder
+		WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(device, nullptr);
+		
+		// Get surface texture
+		WGPUSurfaceTexture surface_texture{};
+		wgpuSurfaceGetCurrentTexture(surface, &surface_texture);
+		WGPUTextureView current_texture_view = wgpuTextureCreateView(surface_texture.texture, nullptr);
+		
+		// Begin render pass
+		WGPURenderPassEncoder render_pass = wgpuCommandEncoderBeginRenderPass(encoder, to_ptr<WGPURenderPassDescriptor>({
+			.colorAttachmentCount = 1,
+			.colorAttachments = to_ptr<WGPURenderPassColorAttachment>({{
+				.view = current_texture_view,
+				.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
+				.loadOp = WGPULoadOp_Clear,
+				.storeOp = WGPUStoreOp_Store,
+				.clearValue = WGPUColor{ red, green, blue, 1.0 }
+				}})
+			}));
+		
+		// Set pipeline and vertex buffers
+		wgpuRenderPassEncoderSetPipeline(render_pass, pipeline);
+		wgpuRenderPassEncoderSetVertexBuffer(render_pass, 0, vertex_buffer, 0, 4 * 4 * sizeof(float));
+		wgpuRenderPassEncoderSetVertexBuffer(render_pass, 1, instance_buffer, 0, sizeof(InstanceData) * sprites.size());
+
+		// Draw each sprite
+		std::string current_image = "";
+		for (size_t i = 0; i < sprites.size(); ++i) {
+			const Sprite& sprite = sprites[i];
+			
+			// Check if texture exists
+			auto it = texturesMap.find(sprite.image);
+			if (it == texturesMap.end()) {
+				spdlog::warn("Texture '{}' not found, skipping sprite", sprite.image);
+				continue;
+			}
+			
+			const ImageData& image_data = it->second;
+			
+			// Compute instance data
+			InstanceData instance_data;
+			instance_data.translation = sprite.position;
+			
+			// Scale to maintain aspect ratio
+			vec2 aspect_scale;
+			if (image_data.width < image_data.height) {
+				aspect_scale = vec2(float(image_data.width) / image_data.height, 1.0f);
+			} else {
+				aspect_scale = vec2(1.0f, float(image_data.height) / image_data.width);
+			}
+			instance_data.scale = aspect_scale * sprite.scale;
+			
+			// Upload instance data to GPU
+			wgpuQueueWriteBuffer(queue, instance_buffer, i * sizeof(InstanceData), &instance_data, sizeof(InstanceData));
+			
+			// Set bind group if image changed
+			if (sprite.image != current_image) {
+				current_image = sprite.image;
+				
+				// Create bind group if it doesn't exist
+				if (!image_data.bindGroup) {
+					auto layout = wgpuRenderPipelineGetBindGroupLayout(pipeline, 0);
+					WGPUBindGroup bind_group = wgpuDeviceCreateBindGroup(device, to_ptr(WGPUBindGroupDescriptor{
+						.layout = layout,
+						.entryCount = 3,
+						.entries = to_ptr<WGPUBindGroupEntry>({
+							{
+								.binding = 0,
+								.buffer = uniform_buffer,
+								.size = sizeof(Uniforms)
+							},
+							{
+								.binding = 1,
+								.sampler = sampler,
+							},
+							{
+								.binding = 2,
+								.textureView = wgpuTextureCreateView(image_data.texture, nullptr)
+							}
+							})
+						}));
+					wgpuBindGroupLayoutRelease(layout);
+					
+					// Store it (need to cast away const since we're caching)
+					const_cast<ImageData&>(image_data).bindGroup = bind_group;
+				}
+				
+				wgpuRenderPassEncoderSetBindGroup(render_pass, 0, image_data.bindGroup, 0, nullptr);
+			}
+			
+			// Draw the sprite instance
+			wgpuRenderPassEncoderDraw(render_pass, 4, 1, 0, (uint32_t)i);
+		}
+		
+		// End render pass
+		wgpuRenderPassEncoderEnd(render_pass);
+		
+		// Submit commands
+		WGPUCommandBuffer command_buffer = wgpuCommandEncoderFinish(encoder, nullptr);
+		wgpuQueueSubmit(queue, 1, &command_buffer);
+		
+		// Present
+		wgpuSurfacePresent(surface);
+		
+		// Cleanup
+		wgpuTextureViewRelease(current_texture_view);
+		wgpuTextureRelease(surface_texture.texture);
+		wgpuRenderPassEncoderRelease(render_pass);
+		wgpuCommandBufferRelease(command_buffer);
+		wgpuCommandEncoderRelease(encoder);
+	}
+
 	void GraphicsManager::Draw()
 	{
-
+		// No-parameter version - just clears the screen
+		Draw(std::vector<Sprite>());
 	}
 	bool GraphicsManager::ShouldQuit()
 	{
 		return glfwWindowShouldClose(window);
+	}
+	bool GraphicsManager::LoadTexture(const std::string& name, const std::string& path)
+	{
+		std::string resolvedTexturePath = engine->resource->ResolvePath(path);
+
+		int width, height, channels;
+		unsigned char* data = stbi_load(resolvedTexturePath.c_str(), &width, &height, &channels, 4);
+		if (data == nullptr)
+		{
+			spdlog::error("Failed to load texture: {}", resolvedTexturePath);
+			return false;
+		}
+
+		WGPUTexture tex = wgpuDeviceCreateTexture(device, to_ptr(WGPUTextureDescriptor{
+			.label = WGPUStringView(name.c_str(), WGPU_STRLEN),
+			.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst,
+			.dimension = WGPUTextureDimension_2D,
+			.size = { (uint32_t)width, (uint32_t)height, 1 },
+			.format = WGPUTextureFormat_RGBA8UnormSrgb,
+			.mipLevelCount = 1,
+			.sampleCount = 1
+			}));
+
+		wgpuQueueWriteTexture(
+			queue,
+			to_ptr<WGPUTexelCopyTextureInfo>({ .texture = tex }),
+			data,
+			width * height * 4,
+			to_ptr<WGPUTexelCopyBufferLayout>({ .bytesPerRow = (uint32_t)(width * 4), .rowsPerImage = (uint32_t)height }),
+			to_ptr(WGPUExtent3D{ (uint32_t)width, (uint32_t)height, 1 })
+		);
+
+		stbi_image_free(data);
+
+		// Store in map
+		ImageData& img = texturesMap[name];
+		img.width = width;
+		img.height = height;
+		img.texture = tex;
+		img.bindGroup = nullptr;  // Will be created on first use
+
+		spdlog::info("Loaded texture '{}' ({}x{}) from {}", name, width, height, resolvedTexturePath);
+
+		return true;
 	}
 }

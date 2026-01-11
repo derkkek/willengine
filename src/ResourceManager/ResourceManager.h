@@ -3,15 +3,21 @@
 #include <Types.h>
 
 /* TODO: Do The Extensions on the class.*/
-
-class ResourceManager
+namespace willengine
 {
-	typedef std::function<void()> UpdateCallback;
-public:
-	ResourceManager();
-	~ResourceManager() = default;
-	std::string ResolvePath(std::string& relativePath);
-	void SetRootPath(std::string& rootPath);
-private:
-	std::filesystem::path rootPath;
-};
+	class Engine;
+
+	class ResourceManager
+	{
+		typedef std::function<void()> UpdateCallback;
+	public:
+		ResourceManager(Engine* engine);
+		~ResourceManager() = default;
+		std::string ResolvePath(const std::string& relativePath);
+		void SetRootPath(const std::string& rootPath);
+	private:
+		Engine* engine;
+		std::filesystem::path rootPath;
+	};
+
+}
