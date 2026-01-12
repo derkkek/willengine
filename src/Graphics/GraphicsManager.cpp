@@ -552,4 +552,12 @@ namespace willengine
 
 		return true;
 	}
-}
+	void GraphicsManager::AddSprite(const std::string& name, vec3 position, vec2 scale, const std::string& path)
+	{
+		if (LoadTexture(name, path))
+		{
+			sprites.push_back(Sprite{ name, position, scale });
+		}
+	}
+
+	}

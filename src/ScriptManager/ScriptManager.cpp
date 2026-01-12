@@ -73,6 +73,11 @@ namespace willengine
                 const std::string& resolvedPath = engine->resource->ResolvePath(path);
                 engine->graphics->LoadTexture(name, path);
             };
+
+        graphics_namespace["AddSprite"] = [this](const std::string& name, const std::string& path, glm::vec3 postion = glm::vec3(0,0,1), glm::vec2 scale = glm::vec2(20,20))
+            {
+                engine->graphics->AddSprite(name, postion, scale, path);
+            };
         lua["Graphics"] = graphics_namespace;
 
         auto resource_namespace = lua.create_table();
@@ -101,6 +106,20 @@ namespace willengine
                 [](const glm::vec3& v1, const glm::vec3& v2) -> glm::vec3 { return v1 * v2; },
                 [](const glm::vec3& v1, float f) -> glm::vec3 { return v1 * f; },
                 [](float f, const glm::vec3& v1) -> glm::vec3 { return f * v1; }
+            )
+        );
+
+        lua.new_usertype<glm::vec2>("vec2",
+            sol::constructors<glm::vec2(), glm::vec2(float), glm::vec2(float, float)>(),
+            "x", &glm::vec2::x,
+            "y", &glm::vec2::y,
+            // optional and fancy: operator overloading. see: https://github.com/ThePhD/sol2/issues/547
+            sol::meta_function::addition, sol::overload([](const glm::vec2& v1, const glm::vec2& v2) -> glm::vec2 { return v1 + v2; }),
+            sol::meta_function::subtraction, sol::overload([](const glm::vec2& v1, const glm::vec2& v2) -> glm::vec2 { return v1 - v2; }),
+            sol::meta_function::multiplication, sol::overload(
+                [](const glm::vec2& v1, const glm::vec2& v2) -> glm::vec2 { return v1 * v2; },
+                [](const glm::vec2& v1, float f) -> glm::vec2 { return v1 * f; },
+                [](float f, const glm::vec2& v1) -> glm::vec2 { return f * v1; }
             )
         );
 	}

@@ -27,6 +27,10 @@ namespace willengine
 		void Draw();  // No-parameter version for convenience
 		bool ShouldQuit();
 		bool LoadTexture(const std::string& name, const std::string& path);
+		void AddSprite(const std::string& name, vec3 position, vec2 scale, const std::string& path);
+
+		std::vector<Sprite> sprites;
+
 
 	private:
 		Engine* engine;
@@ -51,7 +55,7 @@ namespace willengine
 
 		struct ImageData 
 		{
-			/*Preventing copying a texture between different structs so that releasing a texture second time won't crash.*/
+			/*Preventing copying a texture between different structs so that releasing a texture second time won't cause crash.*/
 			ImageData() = default;
 			ImageData(const ImageData&) = delete;  // Can't copy
 			ImageData& operator=(const ImageData&) = delete;  // Can't assign

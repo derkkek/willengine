@@ -15,27 +15,12 @@ int main(int argc, const char* argv[])
     engine.script->LoadScript("test", "scripts/test.lua");
     engine.script->CallFunction("test", "init");
 
-    //Load textures
-    //engine.graphics->LoadTexture("player", "player.png");
-    
-    //sprites
-    std::vector<willengine::Sprite> sprites = {
-         {"player", willengine::vec3(0, 0, 0.5), willengine::vec2(10, 10)},
-     };
-
+    //engine.graphics->AddSprite("player", willengine::vec3(50, 0, 0.5), willengine::vec2(10, 10), "player.png");
 
     
-    engine.RunGameLoop([&]() {
-        //if (engine.input->KeyIsPressed(willengine::InputManager::Key::A)) 
-        //{
-        //    std::cout << "Key 'A' is pressed!\n";
-        //}
-        //if (engine.input->KeyIsPressed(willengine::InputManager::Key::ESC))
-        //{
-        //    engine.Shutdown();
-        //}
+    engine.RunGameLoop([&](){
+
         engine.script->CallFunction("test", "update");
-        engine.graphics->Draw(sprites);
         
     });
     

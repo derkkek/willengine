@@ -21,6 +21,7 @@ namespace willengine
 		delete graphics;
 		delete input;
 		delete resource;
+		delete script;
 	}
 
 	void Engine::Startup(Config config)
@@ -49,7 +50,7 @@ namespace willengine
 				lastTick += timePerExecution;
 			}
 
-			//graphics->Draw();  // Clears screen; sprites should be drawn in callback
+			graphics->Draw(graphics->sprites); //passing it's sprites to it's function weird, i could refactor in the future.
 
 		}
 	}

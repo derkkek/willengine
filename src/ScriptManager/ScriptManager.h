@@ -9,7 +9,7 @@ namespace willengine
 	{
 	public:
 		ScriptManager(Engine* engine);
-		~ScriptManager();
+		~ScriptManager() = default;
 
 		void Startup();
 		void Shutdown();
