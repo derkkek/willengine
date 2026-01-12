@@ -68,12 +68,32 @@ FetchContent_Declare(
   GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable( stb )
+
+FetchContent_Declare(
+    lua
+    GIT_REPOSITORY https://github.com/walterschell/Lua
+    GIT_TAG 504ef66d500fa1fb4f1684b6617b01342eee704a
+    GIT_SHALLOW FALSE
+    GIT_PROGRESS TRUE
+    )
+set(LUA_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable( lua )
+
+FetchContent_Declare(
+    sol2
+    GIT_REPOSITORY https://github.com/yig/sol2
+    GIT_TAG cs425-2025
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE
+    )
+FetchContent_MakeAvailable( sol2 )
+
 ## stb doesn't have a `CMakeLists.txt`. Let's declare a header-only library with an include path.
 add_library( stb INTERFACE )
 target_include_directories( stb INTERFACE ${stb_SOURCE_DIR} )
 
 ## Declare the engine library
-add_library( willengine STATIC src/Engine.cpp "src/Input/InputManager.cpp" "src/Graphics/GraphicsManager.cpp" "src/ResourceManager/ResourceManager.cpp")
+add_library( willengine STATIC src/Engine.cpp "src/Input/InputManager.cpp" "src/Graphics/GraphicsManager.cpp" "src/ResourceManager/ResourceManager.cpp" "src/ScriptManager/ScriptManager.cpp")
 set_target_properties( willengine PROPERTIES CXX_STANDARD 20 )
 
 ## Declare our engine's header path
@@ -85,6 +105,8 @@ target_link_libraries( willengine PUBLIC webgpu)
 target_link_libraries( willengine PUBLIC glfw3webgpu)
 target_link_libraries( willengine PUBLIC glm::glm)
 target_link_libraries( willengine PUBLIC stb)
+target_link_libraries( willengine PUBLIC lua_static)
+target_link_libraries( willengine PUBLIC sol2)
 
 add_executable( helloworld demo/helloworld.cpp)
 set_target_properties( helloworld PROPERTIES CXX_STANDARD 20 )

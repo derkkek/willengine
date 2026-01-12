@@ -8,6 +8,8 @@ namespace willengine
 	class GraphicsManager;
 	class InputManager;
 	class ResourceManager;
+	class ScriptManager;
+
 	typedef std::function<void()> UpdateCallback;
 	typedef glm::vec2 vec2;
 	typedef glm::vec3 vec3;

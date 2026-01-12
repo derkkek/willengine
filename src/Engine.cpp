@@ -2,6 +2,7 @@
 #include "Graphics/GraphicsManager.h"
 #include "Input/InputManager.h"
 #include "ResourceManager/ResourceManager.h"
+#include "ScriptManager/ScriptManager.h"
 #include <iostream>
 
 namespace willengine
@@ -10,6 +11,7 @@ namespace willengine
 		: graphics(new GraphicsManager(this)), 
 		  input(new InputManager(this)),
 		  resource(new ResourceManager(this)),
+		  script(new ScriptManager(this)),
 		  running(false)
 	{
 	}
@@ -25,6 +27,7 @@ namespace willengine
 	{
 		this->config = config;
 		graphics->Startup(config);
+		script->Startup();
 		running = true;
 	}
 

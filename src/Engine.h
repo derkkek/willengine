@@ -32,6 +32,7 @@ namespace willengine
 		GraphicsManager* graphics;
 		InputManager* input;
 		ResourceManager* resource;
+		ScriptManager* script;
 
 	private:
 		bool running;

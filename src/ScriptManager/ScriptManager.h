@@ -1,0 +1,38 @@
+#pragma once
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
+#include <unordered_map>
+namespace willengine
+{
+	class Engine;
+	class ScriptManager
+	{
+	public:
+		ScriptManager(Engine* engine);
+		~ScriptManager();
+
+		void Startup();
+		void Shutdown();
+		bool LoadScript(const std::string& name, const std::string& path);
+		sol::protected_function* GetScript(const std::string& name);
+		bool RunScript(const std::string& name);
+
+		// Call a Lua function with no parameters and no return value
+		bool CallFunction(const std::string& scriptName, const std::string& functionName);
+
+		// Call a Lua function with parameters and get a return value
+		template<typename Ret, typename... Args>
+		sol::optional<Ret> CallFunction(const std::string& scriptName, const std::string& functionName, Args&&... args);
+
+		// Call a Lua function with parameters but no return value
+		template<typename... Args>
+		bool CallFunctionVoid(const std::string& scriptName, const std::string& functionName, Args&&... args);
+
+	private:
+		sol::state lua;
+		Engine* engine;
+
+		std::unordered_map<std::string, sol::protected_function> scripts;
+	};
+
+}
