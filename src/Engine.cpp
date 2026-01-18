@@ -50,7 +50,7 @@ namespace willengine
 				lastTick += timePerExecution;
 			}
 
-			graphics->Draw(graphics->sprites); //passing it's sprites to it's function weird, i could refactor in the future.
+			graphics->Draw();
 
 		}
 	}

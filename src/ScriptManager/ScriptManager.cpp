@@ -88,6 +88,13 @@ namespace willengine
             };
         lua["Resource"] = resource_namespace;
 
+        auto ecs_namespace = lua.create_table();
+        ecs_namespace["CreateEntity"] = [this]()
+            {
+                engine->ecs.Create();
+            };
+        lua["ECS"] = resource_namespace;
+
         lua.new_usertype<Sprite>("Sprite",
             sol::constructors<Sprite()>(),
             "image", &Sprite::image,

@@ -4,6 +4,7 @@
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
 #include <string>
+#include "ECS/ECS.h"
 
 
 namespace willengine
@@ -33,6 +34,7 @@ namespace willengine
 		InputManager* input;
 		ResourceManager* resource;
 		ScriptManager* script;
+		ECS ecs;
 
 	private:
 		bool running;

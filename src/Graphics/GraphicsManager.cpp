@@ -340,10 +340,20 @@ namespace willengine
 		wgpuInstanceRelease(instance);
 		glfwTerminate();
 	}
-	void GraphicsManager::Draw(const std::vector<Sprite>& sprites_input)
+	void GraphicsManager::Draw()
 	{
+
+		// Collect all sprites from the ECS
+		std::vector<Sprite> sprites_to_draw;
+
+		engine->ecs.ForEach<Sprite>([&](entityID entity) {
+			Sprite& sprite = engine->ecs.Get<Sprite>(entity);
+			sprites_to_draw.push_back(sprite);
+			});
+
+
 		// If no sprites, just clear the screen
-		if (sprites_input.empty()) {
+		if (sprites_to_draw.empty()) {
 			WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(device, nullptr);
 			WGPUSurfaceTexture surface_texture{};
 			wgpuSurfaceGetCurrentTexture(surface, &surface_texture);
@@ -372,7 +382,7 @@ namespace willengine
 		}
 
 		// Sort sprites back-to-front (higher z first)
-		auto sprites = sprites_input;
+		auto sprites = sprites_to_draw;
 		std::sort(sprites.begin(), sprites.end(), 
 			[](const Sprite& lhs, const Sprite& rhs) { return lhs.position.z > rhs.position.z; });
 
@@ -499,11 +509,7 @@ namespace willengine
 		wgpuCommandEncoderRelease(encoder);
 	}
 
-	void GraphicsManager::Draw()
-	{
-		// No-parameter version - just clears the screen
-		Draw(std::vector<Sprite>());
-	}
+
 	bool GraphicsManager::ShouldQuit()
 	{
 		return glfwWindowShouldClose(window);

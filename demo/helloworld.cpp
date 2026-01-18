@@ -15,7 +15,20 @@ int main(int argc, const char* argv[])
     engine.script->LoadScript("test", "scripts/test.lua");
     engine.script->CallFunction("test", "init");
 
-    //engine.graphics->AddSprite("player", willengine::vec3(50, 0, 0.5), willengine::vec2(10, 10), "player.png");
+    engine.graphics->LoadTexture("player", "player.png");
+
+    willengine::entityID player = engine.ecs.Create();
+
+    // Add components to it
+    engine.ecs.Get<willengine::Sprite>(player) = willengine::Sprite{
+        .image = "player",
+        .position = willengine::vec3(0, 0, 1),
+        .scale = willengine::vec2(20.0f, 20.0f)
+    };
+
+    engine.ecs.Get<willengine::Velocity>(player) = willengine::Velocity(willengine::vec2(0, 0));
+    engine.ecs.Get<willengine::Health>(player) = willengine::Health{ 100.0 };
+
 
     
     engine.RunGameLoop([&](){

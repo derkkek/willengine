@@ -9,6 +9,7 @@
 namespace willengine
 {
 	class Engine;
+	class ECS;
 	struct Config;
 	struct Sprite;
 
