@@ -28,7 +28,7 @@ namespace willengine
 		void Draw();  // No-parameter version for convenience
 		bool ShouldQuit();
 		bool LoadTexture(const std::string& name, const std::string& path);
-		void AddSprite(const std::string& name, vec3 position, vec2 scale, const std::string& path);
+		void AddSprite(const std::string& name, float alpha, vec2 scale, const std::string& path);
 
 		std::vector<Sprite> sprites;
 

@@ -13,6 +13,7 @@ namespace willengine
 	class ScriptManager;
 	class EventManager;
 	class SoundManager;
+	class PhysicsManager;
 
 	typedef std::function<void()> UpdateCallback;
 	typedef glm::vec2 vec2;
@@ -22,13 +23,32 @@ namespace willengine
 	typedef long entityID;
 	typedef std::type_index ComponentIndex;
 
+	struct Rigidbody
+	{
+		vec2 position;
+		vec2 velocity;
+
+		Rigidbody() = default;
+		Rigidbody(const vec2& pos, const vec2& vel) : position(pos), velocity(vel) {}
+	};
+
 	struct Sprite
 	{
 		std::string image;
-		vec3 position;  // x, y, z (z is for depth sorting)
-		vec2 scale;     // width and height scale
+		float alpha;
+		vec2 scale;
+
+		Sprite() = default;
+		Sprite(const std::string& img, float a, const vec2& s) : image(img), alpha(a), scale(s) {}
 	};
 
+	struct Health
+	{
+		double percent;
+
+		Health() = default;
+		Health(double p) : percent(p) {}
+	};
 	struct Transform : public vec2
 	{
 		Transform() = default;
@@ -42,7 +62,6 @@ namespace willengine
 	};
 
 	struct Gravity { double meters_per_second; };
-	struct Health { double percent; };
 	struct Script { std::string name; };
 
 }

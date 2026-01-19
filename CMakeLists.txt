@@ -116,7 +116,7 @@ add_library( stb INTERFACE )
 target_include_directories( stb INTERFACE ${stb_SOURCE_DIR} )
 
 ## Declare the engine library
-add_library( willengine STATIC src/Engine.cpp "src/InputManager/InputManager.cpp" "src/GraphicsManager/GraphicsManager.cpp" "src/ResourceManager/ResourceManager.cpp" "src/ScriptManager/ScriptManager.cpp" "src/ECS/ECS.cpp" "src/SoundManager/SoundManager.cpp")
+add_library( willengine STATIC src/Engine.cpp "src/InputManager/InputManager.cpp" "src/GraphicsManager/GraphicsManager.cpp" "src/ResourceManager/ResourceManager.cpp" "src/ScriptManager/ScriptManager.cpp" "src/ECS/ECS.cpp" "src/SoundManager/SoundManager.cpp" "src/PhysicsManager/PhysicsManager.cpp")
 set_target_properties( willengine PROPERTIES CXX_STANDARD 20 )
 
 ## Declare our engine's header path

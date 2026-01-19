@@ -19,18 +19,19 @@ int main(int argc, const char* argv[])
 
     //engine.graphics->LoadTexture("player", "player.png");
 
-    willengine::entityID player = engine.ecs.Create();
+    //willengine::entityID player = engine.ecs.Create();
 
 
     // Add components to it
-    engine.ecs.Get<willengine::Sprite>(player) = willengine::Sprite{
-        .image = "player",
-        .position = willengine::vec3(0, 0, 1),
-        .scale = willengine::vec2(20.0f, 20.0f)
-    };
+    //engine.ecs.Get<willengine::Transform>(player) = willengine::Transform{willengine::vec2(5,5)};
+    //engine.ecs.Get<willengine::Rigidbody>(player) = willengine::Rigidbody{.position = willengine::vec2(5,5), .velocity = glm::vec2(0.1,0.1) };
+    //engine.ecs.Get<willengine::Sprite>(player) = willengine::Sprite{
+    //    .image = "player",
+    //    .alpha = 1.0,
+    //    .scale = willengine::vec2(20.0f, 20.0f)
+    //};
 
-    engine.ecs.Get<willengine::Velocity>(player) = willengine::Velocity(willengine::vec2(0, 0));
-    engine.ecs.Get<willengine::Health>(player) = willengine::Health{ 100.0 };
+    //engine.ecs.Get<willengine::Health>(player) = willengine::Health{ 100.0 };
 
     //engine.sound->LoadSound("jump", "sounds/jump.wav");
 

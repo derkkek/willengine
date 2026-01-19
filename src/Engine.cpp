@@ -4,12 +4,14 @@
 #include "ResourceManager/ResourceManager.h"
 #include "ScriptManager/ScriptManager.h"
 #include "SoundManager/SoundManager.h"
+#include "PhysicsManager/PhysicsManager.h"
 #include <iostream>
 
 namespace willengine
 {
 	Engine::Engine()
-		: graphics(new GraphicsManager(this)), 
+		: graphics(new GraphicsManager(this)),
+		  physics(new PhysicsManager(this)),
 		  input(new InputManager(this)),
 		  resource(new ResourceManager(this)),
 		  script(new ScriptManager(this)),
@@ -22,6 +24,7 @@ namespace willengine
 	Engine::~Engine()
 	{
 		delete graphics;
+		delete physics;
 		delete input;
 		delete resource;
 		delete script;
@@ -53,6 +56,7 @@ namespace willengine
 				input->Update();
 				callback();
 				lastTick += timePerExecution;
+				physics->Update();
 			}
 
 			graphics->Draw();

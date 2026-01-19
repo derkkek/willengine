@@ -345,10 +345,14 @@ namespace willengine
 
 		// Collect all sprites from the ECS
 		std::vector<Sprite> sprites_to_draw;
+		std::vector<Transform> transforms;
 
-		engine->ecs.ForEach<Sprite>([&](entityID entity) {
+		engine->ecs.ForEach<Sprite, Transform>([&](entityID entity) 
+			{
 			Sprite& sprite = engine->ecs.Get<Sprite>(entity);
-			sprites_to_draw.push_back(sprite);
+			Transform& transform = engine->ecs.Get<Transform>(entity);
+			sprites_to_draw.emplace_back(sprite);
+			transforms.emplace_back(transform);
 			});
 
 
@@ -384,7 +388,7 @@ namespace willengine
 		// Sort sprites back-to-front (higher z first)
 		auto sprites = sprites_to_draw;
 		std::sort(sprites.begin(), sprites.end(), 
-			[](const Sprite& lhs, const Sprite& rhs) { return lhs.position.z > rhs.position.z; });
+			[](const Sprite& lhs, const Sprite& rhs) { return lhs.alpha > rhs.alpha; });
 
 		// Allocate/reallocate instance buffer if needed
 		if (instance_buffer_capacity < sprites.size()) {
@@ -426,6 +430,7 @@ namespace willengine
 		std::string current_image = "";
 		for (size_t i = 0; i < sprites.size(); ++i) {
 			const Sprite& sprite = sprites[i];
+			const Transform& transform = transforms[i];
 			
 			// Check if texture exists
 			auto it = texturesMap.find(sprite.image);
@@ -438,7 +443,9 @@ namespace willengine
 			
 			// Compute instance data
 			InstanceData instance_data;
-			instance_data.translation = sprite.position;
+			instance_data.translation.x = transform.x;
+			instance_data.translation.y = transform.y;
+			instance_data.translation.z = sprite.alpha;
 			
 			// Scale to maintain aspect ratio
 			vec2 aspect_scale;
@@ -558,11 +565,11 @@ namespace willengine
 
 		return true;
 	}
-	void GraphicsManager::AddSprite(const std::string& name, vec3 position, vec2 scale, const std::string& path)
+	void GraphicsManager::AddSprite(const std::string& name, float alpha, vec2 scale, const std::string& path)
 	{
 		if (LoadTexture(name, path))
 		{
-			sprites.push_back(Sprite{ name, position, scale });
+			sprites.push_back(Sprite{ name, alpha, scale });
 		}
 	}
 

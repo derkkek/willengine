@@ -84,9 +84,9 @@ namespace willengine
                 engine->graphics->LoadTexture(name, path);
             };
 
-        graphics_namespace["AddSprite"] = [this](const std::string& name, const std::string& path, glm::vec3 postion = glm::vec3(0,0,1), glm::vec2 scale = glm::vec2(20,20))
+        graphics_namespace["AddSprite"] = [this](const std::string& name, const std::string& path, float alpha, glm::vec2 scale = glm::vec2(20,20))
             {
-                engine->graphics->AddSprite(name, postion, scale, path);
+                engine->graphics->AddSprite(name, alpha, scale, path);
             };
         lua["Graphics"] = graphics_namespace;
 
@@ -101,9 +101,47 @@ namespace willengine
         auto ecs_namespace = lua.create_table();
         ecs_namespace["CreateEntity"] = [this]()
             {
-                engine->ecs.Create();
+                return engine->ecs.Create();
             };
-        lua["ECS"] = resource_namespace;
+        // AddComponent overloads for each component type
+        ecs_namespace["AddComponent"] = sol::overload(
+            // Transform component
+            [this](entityID entity, Transform component)
+            {
+                engine->ecs.Get<Transform>(entity) = component;
+            },
+            // Sprite component
+            [this](entityID entity, Sprite component)
+            {
+                engine->ecs.Get<Sprite>(entity) = component;
+            },
+            // Rigidbody component
+            [this](entityID entity, Rigidbody component)
+            {
+                engine->ecs.Get<Rigidbody>(entity) = component;
+            },
+            // Velocity component
+            [this](entityID entity, Velocity component)
+            {
+                engine->ecs.Get<Velocity>(entity) = component;
+            },
+            // Health component
+            [this](entityID entity, Health component)
+            {
+                engine->ecs.Get<Health>(entity) = component;
+            },
+            // Gravity component
+            [this](entityID entity, Gravity component)
+            {
+                engine->ecs.Get<Gravity>(entity) = component;
+            },
+            // Script component
+            [this](entityID entity, Script component)
+            {
+                engine->ecs.Get<Script>(entity) = component;
+            }
+        );
+        lua["ECS"] = ecs_namespace;
 
         auto sound_namespace = lua.create_table();
         sound_namespace["LoadSound"] = [this](const std::string& name, const std::string& path)
@@ -120,14 +158,10 @@ namespace willengine
             };
         lua["Sound"] = sound_namespace;
 
-        lua.new_usertype<Sprite>("Sprite",
-            sol::constructors<Sprite()>(),
-            "image", &Sprite::image,
-            "position", &Sprite::position,
-            "scale", &Sprite::scale);
+
 
         lua.new_usertype<glm::vec3>("vec3",
-            sol::constructors<glm::vec3(), glm::vec3(float), glm::vec3(float, float, float)>(),
+            sol::call_constructor, sol::constructors<glm::vec3(), glm::vec3(float), glm::vec3(float, float, float)>(),
             "x", &glm::vec3::x,
             "y", &glm::vec3::y,
             "z", &glm::vec3::z,
@@ -142,7 +176,7 @@ namespace willengine
         );
 
         lua.new_usertype<glm::vec2>("vec2",
-            sol::constructors<glm::vec2(), glm::vec2(float), glm::vec2(float, float)>(),
+            sol::call_constructor, sol::constructors<glm::vec2(), glm::vec2(float), glm::vec2(float, float)>(),
             "x", &glm::vec2::x,
             "y", &glm::vec2::y,
             // optional and fancy: operator overloading. see: https://github.com/ThePhD/sol2/issues/547
@@ -154,6 +188,42 @@ namespace willengine
                 [](float f, const glm::vec2& v1) -> glm::vec2 { return f * v1; }
             )
         );
+
+
+        // Register component usertypes
+        lua.new_usertype<Sprite>("Sprite",
+            sol::call_constructor, sol::constructors<Sprite(), Sprite(const std::string&, float, const glm::vec2&)>(),
+            "image", &Sprite::image,
+            "alpha", &Sprite::alpha,
+            "scale", &Sprite::scale);
+
+        lua.new_usertype<Transform>("Transform",
+            sol::call_constructor, sol::constructors<Transform(), Transform(const glm::vec2&)>(),
+            "x", &Transform::x,
+            "y", &Transform::y);
+
+        lua.new_usertype<Rigidbody>("Rigidbody",
+            sol::call_constructor, sol::constructors<Rigidbody(), Rigidbody(const glm::vec2&, const glm::vec2&)>(),
+            "position", &Rigidbody::position,
+            "velocity", &Rigidbody::velocity);
+
+        lua.new_usertype<Velocity>("Velocity",
+            sol::call_constructor, sol::constructors<Velocity(), Velocity(const glm::vec2&)>(),
+            "x", &Velocity::x,
+            "y", &Velocity::y);
+
+        lua.new_usertype<Health>("Health",
+            sol::call_constructor, sol::constructors<Health(), Health(double)>(),
+            "percent", &Health::percent);
+
+        lua.new_usertype<Gravity>("Gravity",
+            sol::call_constructor, sol::constructors<Gravity()>(),
+            "meters_per_second", &Gravity::meters_per_second);
+
+        lua.new_usertype<Script>("Script",
+            sol::call_constructor, sol::constructors<Script()>(),
+            "name", &Script::name);
+
 	}
 
 	bool ScriptManager::LoadScript(const std::string& name, const std::string& path)

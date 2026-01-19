@@ -32,6 +32,7 @@ namespace willengine
 		void RunGameLoop(const UpdateCallback& callback);
 
 		GraphicsManager* graphics;
+		PhysicsManager* physics;
 		InputManager* input;
 		ResourceManager* resource;
 		ScriptManager* script;
