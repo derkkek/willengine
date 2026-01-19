@@ -19,6 +19,7 @@ namespace willengine
 		prevFrameKeyStates[A] = glfwGetKey(engine->graphics->window, A);
 		prevFrameKeyStates[S] = glfwGetKey(engine->graphics->window, S);
 		prevFrameKeyStates[D] = glfwGetKey(engine->graphics->window, D);
+		prevFrameKeyStates[SPACE] = glfwGetKey(engine->graphics->window, SPACE);
 		prevFrameKeyStates[ESC] = glfwGetKey(engine->graphics->window, ESC);
 
 		glfwPollEvents();

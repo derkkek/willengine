@@ -12,6 +12,7 @@ namespace willengine
 				A = 65,
 				S = 83,
 				D = 68,
+				SPACE = 32,
 				ESC = 256
 			};
 			InputManager(Engine* engine);

@@ -65,6 +65,7 @@ namespace willengine
             { "A", InputManager::Key::A },
             { "S", InputManager::Key::S },
             { "D", InputManager::Key::D },
+            { "SPACE", InputManager::Key::SPACE },
             { "ESC", InputManager::Key::ESC }
             });
         lua["Input"] = input_namespace;
@@ -141,6 +142,102 @@ namespace willengine
                 engine->ecs.Get<Script>(entity) = component;
             }
         );
+
+        // GetComponent - returns pointer to component (nil if not found)
+        ecs_namespace["GetTransform"] = [this](entityID entity) -> Transform* {
+            if (engine->ecs.Has<Transform>(entity)) {
+                return &engine->ecs.Get<Transform>(entity);
+            }
+            return nullptr;
+        };
+        ecs_namespace["GetSprite"] = [this](entityID entity) -> Sprite* {
+            if (engine->ecs.Has<Sprite>(entity)) {
+                return &engine->ecs.Get<Sprite>(entity);
+            }
+            return nullptr;
+        };
+        ecs_namespace["GetRigidbody"] = [this](entityID entity) -> Rigidbody* {
+            if (engine->ecs.Has<Rigidbody>(entity)) {
+                return &engine->ecs.Get<Rigidbody>(entity);
+            }
+            return nullptr;
+        };
+        ecs_namespace["GetVelocity"] = [this](entityID entity) -> Velocity* {
+            if (engine->ecs.Has<Velocity>(entity)) {
+                return &engine->ecs.Get<Velocity>(entity);
+            }
+            return nullptr;
+        };
+        ecs_namespace["GetHealth"] = [this](entityID entity) -> Health* {
+            if (engine->ecs.Has<Health>(entity)) {
+                return &engine->ecs.Get<Health>(entity);
+            }
+            return nullptr;
+        };
+        ecs_namespace["GetGravity"] = [this](entityID entity) -> Gravity* {
+            if (engine->ecs.Has<Gravity>(entity)) {
+                return &engine->ecs.Get<Gravity>(entity);
+            }
+            return nullptr;
+        };
+        ecs_namespace["GetScript"] = [this](entityID entity) -> Script* {
+            if (engine->ecs.Has<Script>(entity)) {
+                return &engine->ecs.Get<Script>(entity);
+            }
+            return nullptr;
+        };
+
+        // HasComponent - check if entity has a component
+        ecs_namespace["HasTransform"] = [this](entityID entity) {
+            return engine->ecs.Has<Transform>(entity);
+        };
+        ecs_namespace["HasSprite"] = [this](entityID entity) {
+            return engine->ecs.Has<Sprite>(entity);
+        };
+        ecs_namespace["HasRigidbody"] = [this](entityID entity) {
+            return engine->ecs.Has<Rigidbody>(entity);
+        };
+        ecs_namespace["HasVelocity"] = [this](entityID entity) {
+            return engine->ecs.Has<Velocity>(entity);
+        };
+        ecs_namespace["HasHealth"] = [this](entityID entity) {
+            return engine->ecs.Has<Health>(entity);
+        };
+        ecs_namespace["HasGravity"] = [this](entityID entity) {
+            return engine->ecs.Has<Gravity>(entity);
+        };
+        ecs_namespace["HasScript"] = [this](entityID entity) {
+            return engine->ecs.Has<Script>(entity);
+        };
+
+        // RemoveComponent - remove a component from an entity
+        ecs_namespace["RemoveTransform"] = [this](entityID entity) {
+            engine->ecs.Drop<Transform>(entity);
+        };
+        ecs_namespace["RemoveSprite"] = [this](entityID entity) {
+            engine->ecs.Drop<Sprite>(entity);
+        };
+        ecs_namespace["RemoveRigidbody"] = [this](entityID entity) {
+            engine->ecs.Drop<Rigidbody>(entity);
+        };
+        ecs_namespace["RemoveVelocity"] = [this](entityID entity) {
+            engine->ecs.Drop<Velocity>(entity);
+        };
+        ecs_namespace["RemoveHealth"] = [this](entityID entity) {
+            engine->ecs.Drop<Health>(entity);
+        };
+        ecs_namespace["RemoveGravity"] = [this](entityID entity) {
+            engine->ecs.Drop<Gravity>(entity);
+        };
+        ecs_namespace["RemoveScript"] = [this](entityID entity) {
+            engine->ecs.Drop<Script>(entity);
+        };
+
+        // DestroyEntity - destroy an entity and all its components
+        ecs_namespace["DestroyEntity"] = [this](entityID entity) {
+            engine->ecs.Destroy(entity);
+        };
+
         lua["ECS"] = ecs_namespace;
 
         auto sound_namespace = lua.create_table();
