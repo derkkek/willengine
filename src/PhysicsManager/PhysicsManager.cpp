@@ -22,7 +22,7 @@ namespace willengine
             {
                 Rigidbody& rb = engine->ecs.Get<Rigidbody>(entity);
                 Transform& transform = engine->ecs.Get<Transform>(entity);
-                BoxCollider& collider = engine->ecs.Get<BoxCollider>(entity);  // Need sprite for scale
+                BoxCollider& collider = engine->ecs.Get<BoxCollider>(entity);
 
                 rb.position.x += rb.velocity.x;
                 rb.position.y += rb.velocity.y;
