@@ -32,6 +32,14 @@ namespace willengine
 		Rigidbody(const vec2& pos, const vec2& vel) : position(pos), velocity(vel) {}
 	};
 
+	struct BoxCollider
+	{
+		vec2 dimensionSizes;
+		bool isCollided;
+		BoxCollider() = default;
+		BoxCollider(const vec2& dimension_sizes, bool isCollided) : dimensionSizes(dimension_sizes), isCollided(isCollided = false){}
+	};
+
 	struct Sprite
 	{
 		std::string image;

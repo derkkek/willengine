@@ -30,6 +30,7 @@ namespace willengine
 		void Startup(Config config);
 		void Shutdown();
 		void RunGameLoop(const UpdateCallback& callback);
+		Config& BringEngineConfiguration();
 
 		GraphicsManager* graphics;
 		PhysicsManager* physics;

@@ -72,5 +72,10 @@ namespace willengine
 		script->Shutdown();
 		graphics->Shutdown();
 	}
+
+	Engine::Config& Engine::BringEngineConfiguration()
+	{
+		return config;
+	}
 }
 

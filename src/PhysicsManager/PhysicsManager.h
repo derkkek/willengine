@@ -12,5 +12,7 @@ namespace willengine
 		void Update();
 	private:
 		Engine* engine;
+		float worldWidth;
+		float worldHeight;
 	};
 }

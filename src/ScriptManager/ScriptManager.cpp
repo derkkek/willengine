@@ -140,6 +140,10 @@ namespace willengine
             [this](entityID entity, Script component)
             {
                 engine->ecs.Get<Script>(entity) = component;
+            },
+            [this](entityID entity, BoxCollider component)
+            {
+                engine->ecs.Get<BoxCollider>(entity) = component;
             }
         );
 
@@ -186,6 +190,13 @@ namespace willengine
             }
             return nullptr;
         };
+        ecs_namespace["GetBoxCollider"] = [this](entityID entity) -> BoxCollider* {
+            if (engine->ecs.Has<BoxCollider>(entity)) {
+                return &engine->ecs.Get<BoxCollider>(entity);
+            }
+            return nullptr;
+            };
+
 
         // HasComponent - check if entity has a component
         ecs_namespace["HasTransform"] = [this](entityID entity) {
@@ -209,6 +220,9 @@ namespace willengine
         ecs_namespace["HasScript"] = [this](entityID entity) {
             return engine->ecs.Has<Script>(entity);
         };
+        ecs_namespace["HasBoxCollider"] = [this](entityID entity) {
+            return engine->ecs.Has<BoxCollider>(entity);
+            };
 
         // RemoveComponent - remove a component from an entity
         ecs_namespace["RemoveTransform"] = [this](entityID entity) {
@@ -320,6 +334,11 @@ namespace willengine
         lua.new_usertype<Script>("Script",
             sol::call_constructor, sol::constructors<Script()>(),
             "name", &Script::name);
+
+        lua.new_usertype<BoxCollider>("BoxCollider",
+            sol::call_constructor, sol::constructors<BoxCollider(), BoxCollider(const glm::vec2&, bool)>(),
+            "dimensionSizes", &BoxCollider::dimensionSizes,
+            "isCollided", &BoxCollider::isCollided);
 
 	}
 
