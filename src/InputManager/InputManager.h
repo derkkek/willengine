@@ -1,5 +1,5 @@
 #pragma once
-
+#include <unordered_map>
 namespace willengine
 {
 	class Engine;
@@ -17,9 +17,12 @@ namespace willengine
 			InputManager(Engine* engine);
 			~InputManager();
 			void Update();
-			bool KeyIsPressed(Key key);
+			bool KeyIsPressedInFrame(Key key);
+			bool KeyJustReleased(Key key);
+			bool KeyJustPressed(Key key);
 
 		private:
 			Engine* engine;
+			std::unordered_map<Key, int> prevFrameKeyStates;
 	};
 }

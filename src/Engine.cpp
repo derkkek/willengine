@@ -1,8 +1,9 @@
 #include "Engine.h"
-#include "Graphics/GraphicsManager.h"
-#include "Input/InputManager.h"
+#include "GraphicsManager/GraphicsManager.h"
+#include "InputManager/InputManager.h"
 #include "ResourceManager/ResourceManager.h"
 #include "ScriptManager/ScriptManager.h"
+#include "SoundManager/SoundManager.h"
 #include <iostream>
 
 namespace willengine
@@ -12,6 +13,8 @@ namespace willengine
 		  input(new InputManager(this)),
 		  resource(new ResourceManager(this)),
 		  script(new ScriptManager(this)),
+		  event(new EventManager),
+	      sound(new SoundManager(this)),
 		  running(false)
 	{
 	}
@@ -22,6 +25,7 @@ namespace willengine
 		delete input;
 		delete resource;
 		delete script;
+		delete sound;
 	}
 
 	void Engine::Startup(Config config)
@@ -29,6 +33,7 @@ namespace willengine
 		this->config = config;
 		graphics->Startup(config);
 		script->Startup();
+		sound->Startup();
 		running = true;
 	}
 
@@ -58,6 +63,10 @@ namespace willengine
 	void Engine::Shutdown()
 	{
 		running = false;
+
+		sound->Shutdown();
+		script->Shutdown();
+		graphics->Shutdown();
 	}
 }
 

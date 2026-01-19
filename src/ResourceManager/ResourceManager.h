@@ -9,7 +9,7 @@ namespace willengine
 
 	class ResourceManager
 	{
-		typedef std::function<void()> UpdateCallback;
+		//typedef std::function<void()> UpdateCallback; ??
 	public:
 		ResourceManager(Engine* engine);
 		~ResourceManager() = default;

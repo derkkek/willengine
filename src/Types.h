@@ -3,6 +3,7 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <typeindex>
+#include <list>
 namespace willengine
 {
 	class Engine;
@@ -10,6 +11,8 @@ namespace willengine
 	class InputManager;
 	class ResourceManager;
 	class ScriptManager;
+	class EventManager;
+	class SoundManager;
 
 	typedef std::function<void()> UpdateCallback;
 	typedef glm::vec2 vec2;

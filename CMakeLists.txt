@@ -43,6 +43,29 @@ FetchContent_Declare(
 FetchContent_MakeAvailable( webgpu )
 
 FetchContent_Declare(
+  soloud
+  GIT_REPOSITORY https://github.com/jarikomppa/soloud
+  GIT_TAG        e82fd32c1f62183922f08c14c814a02b58db1873
+  GIT_SHALLOW FALSE
+  GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable( soloud )
+## SoLoud doesn't have its own `CMakeLists.txt`, so let's declare a library directly from its sources.
+file(GLOB soloud_sources "${soloud_SOURCE_DIR}/src/audiosource/*/*.c*" "${soloud_SOURCE_DIR}/src/c_api/*.c*" "${soloud_SOURCE_DIR}/src/core/*.c*" "${soloud_SOURCE_DIR}/src/filter/*.c*" "${soloud_SOURCE_DIR}/src/backend/miniaudio/soloud_miniaudio.cpp")
+add_library(soloud ${soloud_sources})
+target_compile_definitions(soloud PRIVATE WITH_MINIAUDIO)
+target_include_directories(soloud PUBLIC "${soloud_SOURCE_DIR}/include")
+if(APPLE)
+    find_library(AudioUnit_LIBRARY AudioUnit)
+    find_library(CoreAudio_LIBRARY CoreAudio)
+    target_link_libraries(soloud INTERFACE ${AudioUnit_LIBRARY} ${CoreAudio_LIBRARY})
+    target_compile_definitions(soloud PRIVATE MA_NO_RUNTIME_LINKING)
+endif()
+if(WIN32)
+    target_compile_definitions( soloud PRIVATE MA_NO_JACK )
+endif()
+
+FetchContent_Declare(
   glfw3webgpu
   GIT_REPOSITORY https://github.com/eliemichel/glfw3webgpu
   GIT_TAG        fdcabcc54b56b50c12c10f5317abf8ae7ac32c29
@@ -93,7 +116,7 @@ add_library( stb INTERFACE )
 target_include_directories( stb INTERFACE ${stb_SOURCE_DIR} )
 
 ## Declare the engine library
-add_library( willengine STATIC src/Engine.cpp "src/Input/InputManager.cpp" "src/Graphics/GraphicsManager.cpp" "src/ResourceManager/ResourceManager.cpp" "src/ScriptManager/ScriptManager.cpp" "src/ECS/ECS.cpp")
+add_library( willengine STATIC src/Engine.cpp "src/InputManager/InputManager.cpp" "src/GraphicsManager/GraphicsManager.cpp" "src/ResourceManager/ResourceManager.cpp" "src/ScriptManager/ScriptManager.cpp" "src/ECS/ECS.cpp" "src/SoundManager/SoundManager.cpp")
 set_target_properties( willengine PROPERTIES CXX_STANDARD 20 )
 
 ## Declare our engine's header path
@@ -103,6 +126,7 @@ target_link_libraries( willengine PUBLIC glfw )
 target_link_libraries( willengine PRIVATE spdlog::spdlog )
 target_link_libraries( willengine PUBLIC webgpu)
 target_link_libraries( willengine PUBLIC glfw3webgpu)
+target_link_libraries( willengine PUBLIC glfw spdlog::spdlog soloud )
 target_link_libraries( willengine PUBLIC glm::glm)
 target_link_libraries( willengine PUBLIC stb)
 target_link_libraries( willengine PUBLIC lua_static)

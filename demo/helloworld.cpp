@@ -1,9 +1,11 @@
 #include <iostream>
 #include <vector>
 #include "Engine.h"
-#include "Input/InputManager.h"
-#include "Graphics/GraphicsManager.h"
+#include "InputManager/InputManager.h"
+#include "GraphicsManager/GraphicsManager.h"
 #include "ScriptManager/ScriptManager.h"
+#include "EventManager/EventManager.h"
+#include "SoundManager/SoundManager.h"
 #include "Types.h"
 
 int main(int argc, const char* argv[]) 
@@ -15,9 +17,10 @@ int main(int argc, const char* argv[])
     engine.script->LoadScript("test", "scripts/test.lua");
     engine.script->CallFunction("test", "init");
 
-    engine.graphics->LoadTexture("player", "player.png");
+    //engine.graphics->LoadTexture("player", "player.png");
 
     willengine::entityID player = engine.ecs.Create();
+
 
     // Add components to it
     engine.ecs.Get<willengine::Sprite>(player) = willengine::Sprite{
@@ -29,11 +32,19 @@ int main(int argc, const char* argv[])
     engine.ecs.Get<willengine::Velocity>(player) = willengine::Velocity(willengine::vec2(0, 0));
     engine.ecs.Get<willengine::Health>(player) = willengine::Health{ 100.0 };
 
+    //engine.sound->LoadSound("jump", "sounds/jump.wav");
+
 
     
     engine.RunGameLoop([&](){
 
         engine.script->CallFunction("test", "update");
+
+
+        //if (engine.input->KeyJustReleased(willengine::InputManager::D))
+        //{
+        //    engine.sound->PlaySound("jump");
+        //}
         
     });
     

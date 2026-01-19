@@ -5,6 +5,7 @@
 #include "GLFW/glfw3.h"
 #include <string>
 #include "ECS/ECS.h"
+#include "EventManager/EventManager.h"
 
 
 namespace willengine
@@ -35,6 +36,8 @@ namespace willengine
 		ResourceManager* resource;
 		ScriptManager* script;
 		ECS ecs;
+		EventManager* event;
+		SoundManager* sound;
 
 	private:
 		bool running;

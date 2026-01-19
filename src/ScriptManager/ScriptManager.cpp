@@ -1,8 +1,9 @@
 #include "ScriptManager.h"
 #include "../Engine.h"
 #include "../ResourceManager/ResourceManager.h"
-#include "../Input/InputManager.h"
-#include "../Graphics/GraphicsManager.h"
+#include "../InputManager/InputManager.h"
+#include "../GraphicsManager/GraphicsManager.h"
+#include "../SoundManager/SoundManager.h"
 #include <spdlog/spdlog.h>
 #include <unordered_set>
 namespace willengine
@@ -45,8 +46,17 @@ namespace willengine
         auto input_namespace = lua.create_table();
 
         // Expose the KeyIsPressed function to Lua
-        input_namespace["KeyIsDown"] = [this](int keycode) {
-            return engine->input->KeyIsPressed(static_cast<InputManager::Key>(keycode));
+        input_namespace["KeyHoldingDown"] = [this](int keycode) 
+            {
+            return engine->input->KeyIsPressedInFrame(static_cast<InputManager::Key>(keycode));
+            };
+        input_namespace["KeyReleased"] = [this](int keycode)
+            {
+                return engine->input->KeyJustReleased((static_cast<InputManager::Key>(keycode)));
+            };
+        input_namespace["KeyJustPressed"] = [this](int keycode)
+            {
+                return engine->input->KeyJustPressed((static_cast<InputManager::Key>(keycode)));
             };
 
         // Expose keyboard constants to Lua
@@ -94,6 +104,21 @@ namespace willengine
                 engine->ecs.Create();
             };
         lua["ECS"] = resource_namespace;
+
+        auto sound_namespace = lua.create_table();
+        sound_namespace["LoadSound"] = [this](const std::string& name, const std::string& path)
+            {
+                engine->sound->LoadSound(name, path);
+            };
+        sound_namespace["DeleteSound"] = [this](const std::string& name)
+            {
+                engine->sound->DeleteSound(name);
+            };
+        sound_namespace["Play"] = [this](const std::string& name)
+            {
+                engine->sound->PlaySound(name);
+            };
+        lua["Sound"] = sound_namespace;
 
         lua.new_usertype<Sprite>("Sprite",
             sol::constructors<Sprite()>(),
@@ -289,4 +314,8 @@ namespace willengine
         return true;
     }
 
+    void ScriptManager::Shutdown()
+    {
+
+    }
 }
