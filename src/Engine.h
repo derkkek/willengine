@@ -21,13 +21,19 @@ namespace willengine
 			int window_height = 600;
 			std::string window_name = "WillEngine";
 			bool window_fullscreen = false;
+
+			/* actual world bounds (centered at 0) */
+			int aspectRatio = window_width / window_height;
+			float worldHalfHeight = 100.0f; // From projection: 1/0.01 = 100
+			float worldHalfWidth = worldHalfHeight * aspectRatio;  // ~133 for 800x600
 		};
 
 
-		Engine();
+		Engine(Config config);
 		~Engine();
 
 		void Startup(Config config);
+		void Stop();
 		void Shutdown();
 		void RunGameLoop(const UpdateCallback& callback);
 		Config& BringEngineConfiguration();
@@ -40,9 +46,9 @@ namespace willengine
 		ECS ecs;
 		EventManager* event;
 		SoundManager* sound;
+		bool running;
 
 	private:
-		bool running;
 		Config config;
 	};
 }

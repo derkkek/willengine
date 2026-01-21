@@ -71,9 +71,9 @@ namespace willengine
         lua["Input"] = input_namespace;
 
         // Expose the Shutdown function
-        lua.set_function("Shutdown", [this]()
+        lua.set_function("Stop", [this]()
             {
-                engine->Shutdown();
+                engine->Stop();
             });
 
 

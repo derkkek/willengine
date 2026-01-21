@@ -9,8 +9,9 @@
 
 namespace willengine
 {
-	Engine::Engine()
-		: graphics(new GraphicsManager(this)),
+	Engine::Engine(Config config)
+		: config(config),
+		  graphics(new GraphicsManager(this)),
 		  physics(new PhysicsManager(this)),
 		  input(new InputManager(this)),
 		  resource(new ResourceManager(this)),
@@ -19,6 +20,7 @@ namespace willengine
 	      sound(new SoundManager(this)),
 		  running(false)
 	{
+		Startup(config);
 	}
 
 	Engine::~Engine()
@@ -33,11 +35,16 @@ namespace willengine
 
 	void Engine::Startup(Config config)
 	{
-		this->config = config;
-		graphics->Startup(config);
+		graphics->Startup(this->config);
+		physics->Startup(this->config);
 		script->Startup();
 		sound->Startup();
 		running = true;
+	}
+
+	void Engine::Stop()
+	{
+		running = false;
 	}
 
 	void Engine::RunGameLoop(const UpdateCallback& callback)
@@ -66,8 +73,6 @@ namespace willengine
 
 	void Engine::Shutdown()
 	{
-		running = false;
-
 		sound->Shutdown();
 		script->Shutdown();
 		graphics->Shutdown();

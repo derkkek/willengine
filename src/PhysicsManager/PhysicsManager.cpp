@@ -3,20 +3,19 @@
 namespace willengine
 {
 	PhysicsManager::PhysicsManager(Engine* engine)
-		:engine(engine)
+		:engine(engine), worldHalfHeight(0), worldHalfWidth(0)
 	{
-		willengine::Engine::Config& config = engine->BringEngineConfiguration();
-		worldWidth = 220.0f;
-		worldHeight = worldWidth * (config.window_height / config.window_width);
+
 	}
+    void PhysicsManager::Startup(Engine::Config& config)
+    {
+        worldHalfHeight = config.worldHalfHeight;
+        worldHalfWidth = config.worldHalfWidth;
+    }
     void PhysicsManager::Update()
     {
-        const Engine::Config& config = engine->BringEngineConfiguration();
 
-        // Calculate actual world bounds (centered at 0)
-        float aspectRatio = float(config.window_width) / float(config.window_height);
-        float worldHalfHeight = 100.0f;  // From projection: 1/0.01 = 100
-        float worldHalfWidth = worldHalfHeight * aspectRatio;  // ~133 for 800x600
+
 
         engine->ecs.ForEach<Rigidbody, BoxCollider, Transform>([&](entityID entity)
             {

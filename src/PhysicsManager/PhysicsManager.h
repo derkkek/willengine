@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../Engine.h"
 namespace willengine
 {
 	class Engine;
@@ -9,10 +9,11 @@ namespace willengine
 		PhysicsManager(Engine* engine);
 		~PhysicsManager() = default;
 
+		void Startup(Engine::Config& config);
 		void Update();
 	private:
 		Engine* engine;
-		float worldWidth;
-		float worldHeight;
+		float worldHalfHeight;
+		float worldHalfWidth;
 	};
 }
