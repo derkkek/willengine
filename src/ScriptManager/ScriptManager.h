@@ -28,6 +28,8 @@ namespace willengine
 		template<typename... Args>
 		bool CallFunctionVoid(const std::string& scriptName, const std::string& functionName, Args&&... args);
 
+		std::unordered_map<std::string, sol::protected_function>& BringScripts();
+
 	private:
 		sol::state lua;
 		Engine* engine;

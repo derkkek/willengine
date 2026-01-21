@@ -14,6 +14,7 @@ namespace willengine
 	class EventManager;
 	class SoundManager;
 	class PhysicsManager;
+	class SceneManager;
 
 	typedef std::function<void()> UpdateCallback;
 	typedef glm::vec2 vec2;

@@ -427,6 +427,11 @@ namespace willengine
         return true;
     }
 
+    std::unordered_map<std::string, sol::protected_function>& ScriptManager::BringScripts()
+    {
+        return scripts;
+    }
+
     template<typename Ret, typename... Args>
     sol::optional<Ret> ScriptManager::CallFunction(const std::string& scriptName, const std::string& functionName, Args&&... args)
     {

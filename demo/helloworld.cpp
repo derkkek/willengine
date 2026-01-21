@@ -11,17 +11,11 @@
 int main(int argc, const char* argv[]) 
 {
 
-    willengine::Engine::Config engineConfig{ 800, 600, "WILL", false, 800.0f / 600.0f, 100.0f, 100.0f * 133.0f };
-
-    willengine::Engine engine{ engineConfig };
-
-    
-    engine.script->LoadScript("test", "scripts/test.lua");
-    engine.script->CallFunction("test", "start");
+    willengine::Engine engine{ willengine::Engine::Config{} };
     
     engine.RunGameLoop([&](){
 
-        engine.script->CallFunction("test", "update");
+        engine.script->CallFunction("test", "Update");
         
     });
     

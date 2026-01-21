@@ -5,6 +5,7 @@
 #include "ScriptManager/ScriptManager.h"
 #include "SoundManager/SoundManager.h"
 #include "PhysicsManager/PhysicsManager.h"
+#include "SceneManager/SceneManager.h"
 #include <iostream>
 
 namespace willengine
@@ -13,6 +14,7 @@ namespace willengine
 		: config(config),
 		  graphics(new GraphicsManager(this)),
 		  physics(new PhysicsManager(this)),
+		  scene(new SceneManager(this)),
 		  input(new InputManager(this)),
 		  resource(new ResourceManager(this)),
 		  script(new ScriptManager(this)),
@@ -31,6 +33,7 @@ namespace willengine
 		delete resource;
 		delete script;
 		delete sound;
+		delete scene;
 	}
 
 	void Engine::Startup(Config config)
@@ -39,6 +42,7 @@ namespace willengine
 		physics->Startup(this->config);
 		script->Startup();
 		sound->Startup();
+		scene->Startup();
 		running = true;
 	}
 
