@@ -427,7 +427,7 @@ namespace willengine
         return true;
     }
 
-    std::unordered_map<std::string, sol::protected_function>& ScriptManager::BringScripts()
+    const std::unordered_map<std::string, sol::protected_function>& ScriptManager::BringScripts() const
     {
         return scripts;
     }
