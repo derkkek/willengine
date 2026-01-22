@@ -18,27 +18,7 @@ namespace willengine
 	{
 		soloud.deinit();
 	}
-	bool SoundManager::LoadSound(const std::string& name, const std::string& path)
-	{
-		const std::string resolvedPath = engine->resource->ResolvePath(path);
-		if (!resolvedPath.empty())
-		{
-			nameToSoundMap[name].load(resolvedPath.c_str());
-			spdlog::info("sound: " + name + " has loaded");
-			return true;
-		}
-		return false;
-	}
-	bool SoundManager::DeleteSound(const std::string& name)
-	{
-		if (nameToSoundMap.contains(name))
-		{
-			nameToSoundMap.erase(name);
-			return true;
-		}
-		spdlog::error("following sound isn't included in the sounds: " + name);
-		return false;
-	}
+
 	void SoundManager::PlaySound(const std::string& name)
 	{
 		if (nameToSoundMap.contains(name))

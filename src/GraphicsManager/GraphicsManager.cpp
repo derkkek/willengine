@@ -521,56 +521,5 @@ namespace willengine
 	{
 		return glfwWindowShouldClose(window);
 	}
-	bool GraphicsManager::LoadTexture(const std::string& name, const std::string& path)
-	{
-		std::string resolvedTexturePath = engine->resource->ResolvePath(path);
-
-		int width, height, channels;
-		unsigned char* data = stbi_load(resolvedTexturePath.c_str(), &width, &height, &channels, 4);
-		if (data == nullptr)
-		{
-			spdlog::error("Failed to load texture: {}", resolvedTexturePath);
-			return false;
-		}
-
-		WGPUTexture tex = wgpuDeviceCreateTexture(device, to_ptr(WGPUTextureDescriptor{
-			.label = WGPUStringView(name.c_str(), WGPU_STRLEN),
-			.usage = WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst,
-			.dimension = WGPUTextureDimension_2D,
-			.size = { (uint32_t)width, (uint32_t)height, 1 },
-			.format = WGPUTextureFormat_RGBA8UnormSrgb,
-			.mipLevelCount = 1,
-			.sampleCount = 1
-			}));
-
-		wgpuQueueWriteTexture(
-			queue,
-			to_ptr<WGPUTexelCopyTextureInfo>({ .texture = tex }),
-			data,
-			width * height * 4,
-			to_ptr<WGPUTexelCopyBufferLayout>({ .bytesPerRow = (uint32_t)(width * 4), .rowsPerImage = (uint32_t)height }),
-			to_ptr(WGPUExtent3D{ (uint32_t)width, (uint32_t)height, 1 })
-		);
-
-		stbi_image_free(data);
-
-		// Store in map
-		ImageData& img = texturesMap[name];
-		img.width = width;
-		img.height = height;
-		img.texture = tex;
-		img.bindGroup = nullptr;  // Will be created on first use
-
-		spdlog::info("Loaded texture '{}' ({}x{}) from {}", name, width, height, resolvedTexturePath);
-
-		return true;
-	}
-	void GraphicsManager::AddSprite(const std::string& name, float alpha, vec2 scale, const std::string& path)
-	{
-		if (LoadTexture(name, path))
-		{
-			sprites.push_back(Sprite{ name, alpha, scale });
-		}
-	}
-
-	}
+	
+}

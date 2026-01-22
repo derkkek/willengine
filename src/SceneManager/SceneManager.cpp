@@ -36,7 +36,7 @@ namespace willengine
                 std::filesystem::path assetRelative = std::filesystem::relative(entry.path(),
                     engine->resource->ResolvePath(""));
 
-                if (engine->script->LoadScript(name, assetRelative.string())) 
+                if (engine->resource->LoadScript(name, assetRelative.string())) 
                 {
                     spdlog::info("Auto-loaded script: {}", name);
                 }
@@ -65,7 +65,7 @@ namespace willengine
                 std::filesystem::path assetRelative = std::filesystem::relative(entry.path(),
                     engine->resource->ResolvePath(""));
 
-                if (engine->sound->LoadSound(name, assetRelative.string()))
+                if (engine->resource->LoadSound(name, assetRelative.string()))
                 {
                     spdlog::info("Auto-loaded sound: {}", name);
                 }
@@ -94,7 +94,7 @@ namespace willengine
                 std::filesystem::path assetRelative = std::filesystem::relative(entry.path(),
                     engine->resource->ResolvePath(""));
 
-                if (engine->graphics->LoadTexture(name, assetRelative.string()))
+                if (engine->resource->LoadTexture(name, assetRelative.string()))
                 {
                     spdlog::info("Auto-loaded sprite: {}", name);
                 }
@@ -114,6 +114,5 @@ namespace willengine
         LoadScripts();
         LoadSounds();
         LoadSprites();
-        RunScriptStartFunctions();
     }
 }

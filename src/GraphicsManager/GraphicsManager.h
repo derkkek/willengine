@@ -17,6 +17,7 @@ namespace willengine
 	class GraphicsManager
 	{
 		friend class InputManager;
+		friend class ResourceManager;
 
 	public:
 		GraphicsManager(Engine* engine);
@@ -25,12 +26,8 @@ namespace willengine
 		void Startup(Engine::Config config);
 		void Shutdown();
 		void Draw(const std::vector<Sprite>& sprites);
-		void Draw();  // No-parameter version for convenience
+		void Draw();
 		bool ShouldQuit();
-		bool LoadTexture(const std::string& name, const std::string& path);
-		void AddSprite(const std::string& name, float alpha, vec2 scale, const std::string& path);
-
-		std::vector<Sprite> sprites;
 
 
 	private:

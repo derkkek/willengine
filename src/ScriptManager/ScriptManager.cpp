@@ -82,20 +82,16 @@ namespace willengine
         graphics_namespace["LoadImage"] = [this](const std::string& name, const std::string& path)
             {
                 const std::string& resolvedPath = engine->resource->ResolvePath(path);
-                engine->graphics->LoadTexture(name, path);
+                engine->resource->LoadTexture(name, path);
             };
 
-        graphics_namespace["AddSprite"] = [this](const std::string& name, const std::string& path, float alpha, glm::vec2 scale = glm::vec2(20,20))
-            {
-                engine->graphics->AddSprite(name, alpha, scale, path);
-            };
         lua["Graphics"] = graphics_namespace;
 
         auto resource_namespace = lua.create_table();
         resource_namespace["LoadScript"] = [this](const std::string& name, const std::string& path)
             {
                 const std::string& resolvedPath = engine->resource->ResolvePath(path);
-                LoadScript(name, resolvedPath);
+                engine->resource->LoadScript(name, resolvedPath);
             };
         lua["Resource"] = resource_namespace;
 
@@ -257,11 +253,11 @@ namespace willengine
         auto sound_namespace = lua.create_table();
         sound_namespace["LoadSound"] = [this](const std::string& name, const std::string& path)
             {
-                engine->sound->LoadSound(name, path);
+                engine->resource->LoadSound(name, path);
             };
         sound_namespace["DeleteSound"] = [this](const std::string& name)
             {
-                engine->sound->DeleteSound(name);
+                engine->resource->DeleteSound(name);
             };
         sound_namespace["Play"] = [this](const std::string& name)
             {
@@ -340,25 +336,6 @@ namespace willengine
             "dimensionSizes", &BoxCollider::dimensionSizes,
             "isCollided", &BoxCollider::isCollided);
 
-	}
-
-	bool ScriptManager::LoadScript(const std::string& name, const std::string& path)
-	{
-        std::string resolvedPath = engine->resource->ResolvePath(path);
-        sol::load_result loadResult = lua.load_file(resolvedPath);
-
-        if (!loadResult.valid()) {
-            sol::error err = loadResult;
-            spdlog::error("Failed to load script '{}': {}", name, err.what());
-            return false;
-        }
-
-        // Convert load_result to protected_function and store it
-        sol::protected_function script = loadResult;
-        scripts[name] = script;
-
-        spdlog::info("Loaded script '{}'", name);
-        return true;
 	}
 
     sol::protected_function* ScriptManager::GetScript(const std::string& name)

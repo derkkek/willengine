@@ -7,13 +7,13 @@ namespace willengine
 	class Engine;
 	class ScriptManager
 	{
+		friend class ResourceManager;
 	public:
 		ScriptManager(Engine* engine);
 		~ScriptManager() = default;
 
 		void Startup();
 		void Shutdown();
-		bool LoadScript(const std::string& name, const std::string& path);
 		sol::protected_function* GetScript(const std::string& name);
 		bool RunScript(const std::string& name);
 

@@ -9,13 +9,12 @@ namespace willengine
 	class Engine;
 	class SoundManager
 	{
+		friend class ResourceManager;
 	public:
 		SoundManager(Engine* engine);
 		~SoundManager();
 		void Startup();
 		void Shutdown();
-		bool LoadSound(const std::string& name, const std::string& path);
-		bool DeleteSound(const std::string& name);
 		void PlaySound(const std::string& name);
 	private:
 		Engine* engine;

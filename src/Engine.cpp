@@ -59,6 +59,13 @@ namespace willengine
 		double timePerExecution = 1.0 / 60.0;
 		double lastTick = now - timePerExecution;
 
+		/* instead of giving scene manager to call game functions task, 
+		i can accept 2-3 callback function parameters as Start and Update and 
+		game could pass these functions to the engine main loop and take this as it's responsibility 
+		this approach feels more sane because scene manager has nothing to do with the game logic.*/
+
+		scene->RunScriptStartFunctions(); 
+
 		while (running && !graphics->ShouldQuit())
 		{
 			now = glfwGetTime();
