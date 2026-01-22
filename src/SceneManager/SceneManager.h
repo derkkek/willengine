@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <string>
+
 namespace willengine
 {
 	class Engine;
@@ -13,6 +15,7 @@ namespace willengine
 		void LoadScripts();
 		void LoadSounds();
 		void LoadSprites();
+		bool CreateGameEntititesWComponents(const std::string& path);
 		void RunScriptStartFunctions();
 
 	private:

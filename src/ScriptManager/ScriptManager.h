@@ -8,6 +8,7 @@ namespace willengine
 	class ScriptManager
 	{
 		friend class ResourceManager;
+		friend class SceneManager;
 	public:
 		ScriptManager(Engine* engine);
 		~ScriptManager() = default;

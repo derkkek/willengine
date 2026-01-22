@@ -13,6 +13,7 @@ namespace willengine
 	public:
 		ResourceManager(Engine* engine);
 		~ResourceManager() = default;
+
 		std::string ResolvePath(const std::string& relativePath);
 		void SetRootPath(const std::string& rootPath);
 
