@@ -2,6 +2,7 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 #include <unordered_map>
+#include "../ECS/ECS.h"
 namespace willengine
 {
 	class Engine;
@@ -15,7 +16,17 @@ namespace willengine
 
 		void Startup();
 		void Shutdown();
+
 		sol::protected_function* GetScript(const std::string& name);
+
+		void InitializeEntityScript(entityID entity, const std::string& scriptName);
+
+		void CallEntityFunction(entityID entity, const std::string& functionName);
+
+		void UpdateAllEntityScripts();
+
+		void StartAllEntityScripts();
+
 		bool RunScript(const std::string& name);
 
 		// Call a Lua function with no parameters and no return value
@@ -36,6 +47,7 @@ namespace willengine
 		Engine* engine;
 
 		std::unordered_map<std::string, sol::protected_function> scripts;
+		std::unordered_map<entityID, sol::table> scriptInstances;
 	};
 
 }

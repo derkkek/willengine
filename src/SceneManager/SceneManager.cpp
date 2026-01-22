@@ -164,6 +164,19 @@ namespace willengine
                 rigidbody.position = glm::vec2(rb->get_or("x", 0.0f), rb->get_or("y", 0.0f));
                 rigidbody.velocity = glm::vec2(rb->get_or("x_vel", 0.0f), rb->get_or("y_vel", 0.0f));
             }
+            // Script
+            if (sol::optional<sol::table> scriptDef = components["script"]) {
+                std::string scriptName = scriptDef->get_or<std::string>("name", "");
+                if (!scriptName.empty()) {
+                    Script& script = engine->ecs.Get<Script>(entity);
+                    script.name = scriptName;
+
+                    // Create a Lua table instance for this entity's script state
+                    engine->script->InitializeEntityScript(entity, scriptName);
+
+                    spdlog::info("Attached script '{}' to entity", scriptName);
+                }
+            }
 
             // Sprite
             if (sol::optional<sol::table> s = components["sprite"]) {
@@ -191,14 +204,7 @@ namespace willengine
 
         return true;
     }
-    void SceneManager::RunScriptStartFunctions()
-    {
-        auto& sceneScripts = engine->script->BringScripts();
-        for (auto& [name, scriptFunc] : sceneScripts)
-        {
-            engine->script->CallFunction(name, "Start");
-        }
-    }
+
     void SceneManager::Startup()
     {
         LoadScripts();

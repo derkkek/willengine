@@ -9,7 +9,8 @@ Scene ={
                 rigidbody = {x = 5, y = 5, x_vel = 0.1, y_vel = 0.1},
                 sprite = {sprite_id = "player", sprite_alpha = 1, width = 20, height = 20},
                 box_collider = {width = 20, height = 20, isCollided = false},
-                health = {amount = 100}
+                health = {amount = 100},
+                script = "test.lua", instance?
             }
         },
         {

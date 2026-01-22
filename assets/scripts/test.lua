@@ -1,19 +1,20 @@
-
-function start()
-	--Graphics.LoadImage("player", "player.png")
-	--Sound.LoadSound("jump", "sounds/jump.wav")
-
-	player = ECS.CreateEntity()
-	ECS.AddComponent(player, Transform(vec2(5, 5)))
-	ECS.AddComponent(player, Rigidbody(vec2(5,5), vec2(0.1,0.1)))
-	ECS.AddComponent(player, Sprite("player", 1, vec2(20,20)))
-	ECS.AddComponent(player, BoxCollider(vec2(20,20), false))
-	--ECS.AddComponent(player, Health(100))
-
-	--print(ECS.HasBoxCollider(player))
-	--rb = ECS.GetRigidbody(player)
+function Start(self)
+    -- self.entity is the entity ID this script is attached to
+    self.rb = ECS.GetRigidbody(self.entity)
+    print("Player controller started for entity: " .. self.entity)
 end
 
-function update()
-
+function Update(self)
+    if Input.KeyHoldingDown(KEYBOARD.A) then
+        self.rb.velocity.x = self.rb.velocity.x - 0.1
+    end
+    if Input.KeyHoldingDown(KEYBOARD.D) then
+        self.rb.velocity.x = self.rb.velocity.x + 0.1
+    end
+    if Input.KeyHoldingDown(KEYBOARD.W) then
+        self.rb.velocity.y = self.rb.velocity.y + 0.1
+    end
+    if Input.KeyHoldingDown(KEYBOARD.S) then
+        self.rb.velocity.y = self.rb.velocity.y - 0.1
+    end
 end

@@ -347,6 +347,48 @@ namespace willengine
         return nullptr;
     }
 
+    void ScriptManager::InitializeEntityScript(entityID entity, const std::string& scriptName) {
+        // Create a unique table for this entity's script instance
+        sol::table instance = lua.create_table();
+        instance["entity"] = entity;  // Script can access its own entity
+
+        // Store the instance
+        scriptInstances[entity] = instance;
+
+        // Load and run the script file to define functions (if not already loaded)
+        std::string scriptPath = engine->resource->ResolvePath("scripts/" + scriptName + ".lua");
+        lua.script_file(scriptPath);
+    }
+
+    void ScriptManager::CallEntityFunction(entityID entity, const std::string& functionName) {
+        auto it = scriptInstances.find(entity);
+        if (it == scriptInstances.end()) return;
+
+        sol::table& instance = it->second;
+
+        // Get the function from global state
+        sol::optional<sol::protected_function> func = lua[functionName];
+        if (func) {
+            sol::protected_function_result result = (*func)(instance);
+            if (!result.valid()) {
+                sol::error err = result;
+                spdlog::error("Error in {} for entity {}: {}", functionName, entity, err.what());
+            }
+        }
+    }
+
+    void ScriptManager::UpdateAllEntityScripts() {
+        engine->ecs.ForEach<Script>([this](entityID entity) {
+            CallEntityFunction(entity, "update");
+            });
+    }
+
+    void ScriptManager::StartAllEntityScripts() {
+        engine->ecs.ForEach<Script>([this](entityID entity) {
+            CallEntityFunction(entity, "start");
+            });
+    }
+
     bool ScriptManager::RunScript(const std::string& name)
     {
         sol::protected_function* script = GetScript(name);

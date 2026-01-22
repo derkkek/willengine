@@ -10,13 +10,10 @@
 
 int main(int argc, const char* argv[]) 
 {
-
     willengine::Engine engine{ willengine::Engine::Config{} };
     
     engine.RunGameLoop([&](){
-
-        engine.script->CallFunction("test", "Update");
-        
+        // you can natively inject c++ code to the game engine from here.
     });
     
     engine.Shutdown();

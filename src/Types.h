@@ -71,6 +71,9 @@ namespace willengine
 	};
 
 	struct Gravity { double meters_per_second; };
-	struct Script { std::string name; };
+	struct Script 
+	{ 
+		std::string name;
+	};
 
 }

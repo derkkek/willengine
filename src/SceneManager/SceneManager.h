@@ -16,7 +16,6 @@ namespace willengine
 		void LoadSounds();
 		void LoadSprites();
 		bool CreateGameEntititesWComponents(const std::string& path);
-		void RunScriptStartFunctions();
 
 	private:
 		Engine* engine;
