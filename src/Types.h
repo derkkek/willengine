@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <typeindex>
 #include <list>
+#include <webgpu/webgpu.h>
 namespace willengine
 {
 	class Engine;
@@ -17,12 +18,16 @@ namespace willengine
 	class SceneManager;
 
 	typedef std::function<void()> UpdateCallback;
+	typedef std::function<void(WGPURenderPassEncoder)> RenderCallback;
+
 	typedef glm::vec2 vec2;
 	typedef glm::vec3 vec3;
 	typedef glm::vec4 vec4;
 	typedef glm::mat4 mat4;
 	typedef long entityID;
 	typedef std::type_index ComponentIndex;
+
+
 
 	struct Rigidbody
 	{

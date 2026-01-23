@@ -111,6 +111,38 @@ FetchContent_Declare(
     )
 FetchContent_MakeAvailable( sol2 )
 
+# ============================================
+# IMGUI
+# ============================================
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui
+    GIT_TAG v1.92.1
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(imgui)
+
+## imgui doesn't have a `CMakeLists.txt`, so let's create a library for it.
+file(GLOB imgui_sources 
+    "${imgui_SOURCE_DIR}/*.c*" 
+    "${imgui_SOURCE_DIR}/backends/imgui_impl_wgpu.cpp*" 
+    "${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp*"
+)
+add_library(imgui ${imgui_sources})
+target_include_directories(imgui PUBLIC "${imgui_SOURCE_DIR}" "${imgui_SOURCE_DIR}/backends")
+target_link_libraries(imgui PUBLIC glfw webgpu)
+set_target_properties(imgui PROPERTIES CXX_STANDARD 17)
+
+## Exactly one of IMGUI_IMPL_WEBGPU_BACKEND_DAWN or IMGUI_IMPL_WEBGPU_BACKEND_WGPU must be defined.
+if(WEBGPU_BACKEND STREQUAL "dawn")
+    target_compile_definitions(imgui PUBLIC IMGUI_IMPL_WEBGPU_BACKEND_DAWN)
+elseif(WEBGPU_BACKEND STREQUAL "wgpu")
+    target_compile_definitions(imgui PUBLIC IMGUI_IMPL_WEBGPU_BACKEND_WGPU)
+else()
+    message(FATAL_ERROR "Invalid WEBGPU_BACKEND value: ${WEBGPU_BACKEND}. Must be 'wgpu' or 'dawn'.")
+endif()
+
 ## stb doesn't have a `CMakeLists.txt`. Let's declare a header-only library with an include path.
 add_library( stb INTERFACE )
 target_include_directories( stb INTERFACE ${stb_SOURCE_DIR} )
@@ -137,3 +169,13 @@ set_target_properties( helloworld PROPERTIES CXX_STANDARD 20 )
 target_link_libraries( helloworld PRIVATE willengine )
 target_copy_webgpu_binaries( helloworld )
 add_custom_target( run_helloworld helloworld USES_TERMINAL WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} )
+
+# ============================================
+# EDITOR
+# ============================================
+add_executable(editor Editor/editor.cpp)
+set_target_properties(editor PROPERTIES CXX_STANDARD 20)
+target_link_libraries(editor PRIVATE willengine imgui)
+target_compile_definitions(editor PRIVATE WILLENGINE_EDITOR=1)
+target_copy_webgpu_binaries(editor)
+add_custom_target(run_editor editor USES_TERMINAL WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

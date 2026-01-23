@@ -1,4 +1,4 @@
-﻿#include "GraphicsManager.h"
+#include "GraphicsManager.h"
 #include "../Engine.h"
 #include "../ResourceManager/ResourceManager.h"
 #define STB_IMAGE_IMPLEMENTATION
@@ -516,10 +516,171 @@ namespace willengine
 		wgpuCommandEncoderRelease(encoder);
 	}
 
+	void GraphicsManager::DrawWithEditor(const std::function<void(WGPURenderPassEncoder)>& imguiRenderCallback)
+	{
+		// Collect all sprites from the ECS
+		std::vector<Sprite> sprites_to_draw;
+		std::vector<Transform> transforms;
+
+		engine->ecs.ForEach<Sprite, Transform>([&](entityID entity) 
+			{
+			Sprite& sprite = engine->ecs.Get<Sprite>(entity);
+			Transform& transform = engine->ecs.Get<Transform>(entity);
+			sprites_to_draw.emplace_back(sprite);
+			transforms.emplace_back(transform);
+			});
+
+		// Sort sprites back-to-front (higher z first)
+		auto sprites = sprites_to_draw;
+		if (!sprites.empty()) {
+			std::sort(sprites.begin(), sprites.end(), 
+				[](const Sprite& lhs, const Sprite& rhs) { return lhs.alpha > rhs.alpha; });
+
+			// Allocate/reallocate instance buffer if needed
+			if (instance_buffer_capacity < sprites.size()) {
+				if (instance_buffer) wgpuBufferRelease(instance_buffer);
+				instance_buffer_capacity = sprites.size();
+				instance_buffer = wgpuDeviceCreateBuffer(device, to_ptr(WGPUBufferDescriptor{
+					.label = WGPUStringView("Instance Buffer", WGPU_STRLEN),
+					.usage = WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex,
+					.size = sizeof(InstanceData) * instance_buffer_capacity
+					}));
+			}
+		}
+
+		// Create command encoder
+		WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(device, nullptr);
+		
+		// Get surface texture
+		WGPUSurfaceTexture surface_texture{};
+		wgpuSurfaceGetCurrentTexture(surface, &surface_texture);
+		WGPUTextureView current_texture_view = wgpuTextureCreateView(surface_texture.texture, nullptr);
+		
+		// Begin render pass
+		WGPURenderPassEncoder render_pass = wgpuCommandEncoderBeginRenderPass(encoder, to_ptr<WGPURenderPassDescriptor>({
+			.colorAttachmentCount = 1,
+			.colorAttachments = to_ptr<WGPURenderPassColorAttachment>({{
+				.view = current_texture_view,
+				.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
+				.loadOp = WGPULoadOp_Clear,
+				.storeOp = WGPUStoreOp_Store,
+				.clearValue = WGPUColor{ red, green, blue, 1.0 }
+				}})
+			}));
+		
+		// Draw sprites (scene) first - behind ImGui
+		if (!sprites.empty()) {
+			wgpuRenderPassEncoderSetPipeline(render_pass, pipeline);
+			wgpuRenderPassEncoderSetVertexBuffer(render_pass, 0, vertex_buffer, 0, 4 * 4 * sizeof(float));
+			wgpuRenderPassEncoderSetVertexBuffer(render_pass, 1, instance_buffer, 0, sizeof(InstanceData) * sprites.size());
+
+			std::string current_image = "";
+			for (size_t i = 0; i < sprites.size(); ++i) {
+				const Sprite& sprite = sprites[i];
+				const Transform& transform = transforms[i];
+				
+				// Check if texture exists
+				auto it = texturesMap.find(sprite.image);
+				if (it == texturesMap.end()) {
+					spdlog::warn("Texture '{}' not found, skipping sprite", sprite.image);
+					continue;
+				}
+				
+				const ImageData& image_data = it->second;
+				
+				// Compute instance data
+				InstanceData instance_data;
+				instance_data.translation.x = transform.x;
+				instance_data.translation.y = transform.y;
+				instance_data.translation.z = sprite.alpha;
+				
+				// Scale to maintain aspect ratio
+				vec2 aspect_scale;
+				if (image_data.width < image_data.height) {
+					aspect_scale = vec2(float(image_data.width) / image_data.height, 1.0f);
+				} else {
+					aspect_scale = vec2(1.0f, float(image_data.height) / image_data.width);
+				}
+				instance_data.scale = aspect_scale * sprite.scale;
+				
+				// Upload instance data to GPU
+				wgpuQueueWriteBuffer(queue, instance_buffer, i * sizeof(InstanceData), &instance_data, sizeof(InstanceData));
+				
+				// Set bind group if image changed
+				if (sprite.image != current_image) {
+					current_image = sprite.image;
+					
+					// Create bind group if it doesn't exist
+					if (!image_data.bindGroup) {
+						auto layout = wgpuRenderPipelineGetBindGroupLayout(pipeline, 0);
+						WGPUBindGroup bind_group = wgpuDeviceCreateBindGroup(device, to_ptr(WGPUBindGroupDescriptor{
+							.layout = layout,
+							.entryCount = 3,
+							.entries = to_ptr<WGPUBindGroupEntry>({
+								{
+									.binding = 0,
+									.buffer = uniform_buffer,
+									.size = sizeof(Uniforms)
+								},
+								{
+									.binding = 1,
+									.sampler = sampler,
+								},
+								{
+									.binding = 2,
+									.textureView = wgpuTextureCreateView(image_data.texture, nullptr)
+								}
+								})
+							}));
+						wgpuBindGroupLayoutRelease(layout);
+						
+						// Store it (need to cast away const since we're caching)
+						const_cast<ImageData&>(image_data).bindGroup = bind_group;
+					}
+					
+					wgpuRenderPassEncoderSetBindGroup(render_pass, 0, image_data.bindGroup, 0, nullptr);
+				}
+				
+				// Draw the sprite instance
+				wgpuRenderPassEncoderDraw(render_pass, 4, 1, 0, (uint32_t)i);
+			}
+		}
+		
+		// Draw ImGui on top of the scene
+		if (imguiRenderCallback) {
+			imguiRenderCallback(render_pass);
+		}
+		
+		// End render pass
+		wgpuRenderPassEncoderEnd(render_pass);
+		
+		// Submit commands
+		WGPUCommandBuffer command_buffer = wgpuCommandEncoderFinish(encoder, nullptr);
+		wgpuQueueSubmit(queue, 1, &command_buffer);
+		
+		// Present (only once!)
+		wgpuSurfacePresent(surface);
+		
+		// Cleanup
+		wgpuTextureViewRelease(current_texture_view);
+		wgpuTextureRelease(surface_texture.texture);
+		wgpuRenderPassEncoderRelease(render_pass);
+		wgpuCommandBufferRelease(command_buffer);
+		wgpuCommandEncoderRelease(encoder);
+	}
 
 	bool GraphicsManager::ShouldQuit()
 	{
 		return glfwWindowShouldClose(window);
+	}
+
+	WGPUTextureFormat GraphicsManager::GetSurfaceFormat() const
+	{
+		WGPUSurfaceCapabilities capabilities{};
+		wgpuSurfaceGetCapabilities(surface, adapter, &capabilities);
+		WGPUTextureFormat format = capabilities.formats[0];
+		wgpuSurfaceCapabilitiesFreeMembers(capabilities);
+		return format;
 	}
 	
 }

@@ -17,8 +17,8 @@ namespace willengine
 		struct Config
 		{
 			// Window settings
-			int window_width = 800;
-			int window_height = 600;
+			int window_width = 1920;
+			int window_height = 1080;
 			std::string window_name = "WillEngine";
 			bool window_fullscreen = false;
 
@@ -36,6 +36,7 @@ namespace willengine
 		void Stop();
 		void Shutdown();
 		void RunGameLoop(const UpdateCallback& callback);
+		void RunEditorLoop(const UpdateCallback& editorCallback, const RenderCallback& renderCallback);
 		Config& BringEngineConfiguration();
 
 		GraphicsManager* graphics;

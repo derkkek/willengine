@@ -78,6 +78,18 @@ namespace willengine
 		}
 	}
 
+	void Engine::RunEditorLoop(const UpdateCallback& editorCallback, const RenderCallback& renderCallback)
+	{
+		while (running && !graphics->ShouldQuit())
+		{
+			input->Update();
+
+			editorCallback();  // Prepares ImGui (NewFrame, widgets, Render)
+
+			graphics->DrawWithEditor(renderCallback);  // Draws sprites + ImGui in one pass
+		}
+	}
+
 	void Engine::Shutdown()
 	{
 		sound->Shutdown();

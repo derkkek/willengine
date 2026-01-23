@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <functional>
 
 namespace willengine
 {
@@ -29,6 +30,12 @@ namespace willengine
 		void Draw();
 		bool ShouldQuit();
 
+		GLFWwindow* GetWindow() const { return window; }
+		WGPUDevice GetDevice() const { return device; }
+		WGPUQueue GetQueue() const { return queue; }
+		WGPUTextureFormat GetSurfaceFormat() const;
+
+		void DrawWithEditor(const std::function<void(WGPURenderPassEncoder)>& imguiRenderCallback);
 
 	private:
 		Engine* engine;
