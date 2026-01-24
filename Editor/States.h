@@ -2,6 +2,13 @@
 
 namespace willeditor
 {
+    enum PlayState
+    {
+        Stopped,
+        Playing,
+        Paused
+    };
+
     struct EntityEditorState 
     {
         char entityID[128] = "";

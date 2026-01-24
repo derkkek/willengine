@@ -47,7 +47,7 @@ namespace willeditor
         ImGui_ImplWGPU_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
+        ShowMainToolbar();
         ShowEntityCreatorWindow(&showEntityCreatorWindow);
 
         ImGui::Render();
@@ -252,5 +252,107 @@ namespace willeditor
         //}
 
         ImGui::End();
+    }
+
+    void UI::ShowMainToolbar()
+    {
+        // Create a toolbar window at the top
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+        ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x, viewport->Pos.y));
+        ImGui::SetNextWindowSize(ImVec2(viewport->Size.x, 40));
+        //ImGui::SetNextWindowViewport(viewport->ID);
+
+        ImGuiWindowFlags toolbar_flags =
+            ImGuiWindowFlags_NoDecoration |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoScrollWithMouse |
+            ImGuiWindowFlags_NoSavedSettings |
+            ImGuiWindowFlags_NoBringToFrontOnFocus;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 5));
+
+        if (ImGui::Begin("##Toolbar", nullptr, toolbar_flags))
+        {
+            // Center the buttons
+            float buttonWidth = 60.0f;
+            float totalWidth = buttonWidth * 3 + ImGui::GetStyle().ItemSpacing.x * 2;
+            float startX = (viewport->Size.x - totalWidth) / 2.0f;
+
+            ImGui::SetCursorPosX(startX);
+
+            // Play Button
+            bool isPlaying = (playState == PlayState::Playing);
+            bool isPaused = (playState == PlayState::Paused);
+            bool isStopped = (playState == PlayState::Stopped);
+
+            // Change button color when playing
+            if (isPlaying)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.2f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.7f, 0.3f, 1.0f));
+            }
+
+            if (ImGui::Button(isPlaying ? "Playing" : "Play", ImVec2(buttonWidth, 25)))
+            {
+                if (isStopped || isPaused)
+                {
+                    playState = PlayState::Playing;
+                    if (OnPlayClicked) OnPlayClicked();
+                }
+            }
+
+            if (isPlaying)
+            {
+                ImGui::PopStyleColor(2);
+            }
+
+            ImGui::SameLine();
+
+            // Pause Button
+            if (isPaused)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.6f, 0.2f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.7f, 0.3f, 1.0f));
+            }
+
+            // Disable pause if not playing
+            ImGui::BeginDisabled(isStopped);
+            if (ImGui::Button(isPaused ? "Paused" : "Pause", ImVec2(buttonWidth, 25)))
+            {
+                if (isPlaying)
+                {
+                    playState = PlayState::Paused;
+                    if (OnPauseClicked) OnPauseClicked();
+                }
+                else if (isPaused)
+                {
+                    playState = PlayState::Playing;
+                    if (OnPlayClicked) OnPlayClicked();
+                }
+            }
+            ImGui::EndDisabled();
+
+            if (isPaused)
+            {
+                ImGui::PopStyleColor(2);
+            }
+
+            ImGui::SameLine();
+
+            // Stop Button
+            ImGui::BeginDisabled(isStopped);
+            if (ImGui::Button("Stop", ImVec2(buttonWidth, 25)))
+            {
+                playState = PlayState::Stopped;
+                if (OnStopClicked) OnStopClicked();
+            }
+            ImGui::EndDisabled();
+        }
+        ImGui::End();
+
+        ImGui::PopStyleVar(3);
     }
 }

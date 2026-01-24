@@ -2,10 +2,12 @@
 #include "UserInterface/UI.h"
 #include "GraphicsManager/GraphicsManager.h"
 #include "PhysicsManager/PhysicsManager.h"
+#include "ScriptManager/ScriptManager.h"
 #include "States.h"
 #include <iostream>
 #include <Events/CreateEntityEvent.h>
 #include <Events/SaveEntityToConfigFileEvent.h>
+#include <spdlog/spdlog.h>
 
 
 
@@ -24,10 +26,28 @@ int main(int argc, const char* argv[])
         engine.event->EmitEvent<willengine::SaveEntityToConfigFileEvent>(saveData);
         };
 
+    ui.OnPlayClicked = [&engine]() {
+        spdlog::info("Play clicked - starting scripts");
+        engine.script->StartAllEntityScripts();
+        };
+
+    ui.OnPauseClicked = [&engine]() {
+        spdlog::info("Pause clicked");
+        };
+
+    ui.OnStopClicked = [&engine]() {
+        spdlog::info("Stop clicked");
+        // Optionally reset scene state here
+        };
+
     engine.RunEditorLoop(
         [&]() 
         {
-            engine.physics->Update();
+            if (ui.GetPlayState() == willeditor::PlayState::Playing)
+            {
+                engine.script->UpdateAllEntityScripts();
+                engine.physics->Update();
+            }
             ui.Update();
         },
         [](WGPURenderPassEncoder render_pass) {

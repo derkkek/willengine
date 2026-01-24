@@ -379,13 +379,13 @@ namespace willengine
 
     void ScriptManager::UpdateAllEntityScripts() {
         engine->ecs.ForEach<Script>([this](entityID entity) {
-            CallEntityFunction(entity, "update");
+            CallEntityFunction(entity, "Update");
             });
     }
 
     void ScriptManager::StartAllEntityScripts() {
         engine->ecs.ForEach<Script>([this](entityID entity) {
-            CallEntityFunction(entity, "start");
+            CallEntityFunction(entity, "Start");
             });
     }
 

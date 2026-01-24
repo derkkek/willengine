@@ -10,7 +10,7 @@ Scene ={
                 sprite = {sprite_id = "player", sprite_alpha = 1, width = 20, height = 20},
                 box_collider = {width = 20, height = 20, isCollided = false},
                 health = {amount = 100},
-                script = "test.lua", instance?
+                script = {name = "test"}
             }
         },
         {
