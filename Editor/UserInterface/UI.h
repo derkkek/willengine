@@ -4,6 +4,7 @@
 #include "../States.h"
 #include <functional>                    
 #include <Events/CreateEntityEvent.h>
+#include <Events/SaveEntityToConfigFileEvent.h>
 namespace willeditor
 {
 	class UI
@@ -21,6 +22,7 @@ namespace willeditor
 		void ShowEntityCreatorWindow(bool* open);
 
 		std::function<void(const willengine::EntityCreationData&)> EngineEmitCreateEntityEventCallback;
+		std::function<void(const willengine::EntitySaveData&)> EngineEmitSaveEntityCallback;
 	private:
 		static willeditor::EntityEditorState g_entityEditor;
 		bool showEntityCreatorWindow;

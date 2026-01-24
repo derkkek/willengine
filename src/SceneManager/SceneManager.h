@@ -6,6 +6,7 @@ namespace willengine
 {
 	class Engine;
 	class CreateEntityEvent;
+	class SaveEntityToConfigFileEvent;
 	class SceneManager
 	{
 	public:
@@ -20,6 +21,7 @@ namespace willengine
 
 		void SubscribeToEvents();
 		void OnCreateEntity(CreateEntityEvent& event);
+		void OnSaveEntityToConfig(SaveEntityToConfigFileEvent& event);
 
 
 	private:

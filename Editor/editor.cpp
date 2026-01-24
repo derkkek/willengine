@@ -5,6 +5,7 @@
 #include "States.h"
 #include <iostream>
 #include <Events/CreateEntityEvent.h>
+#include <Events/SaveEntityToConfigFileEvent.h>
 
 
 
@@ -19,9 +20,13 @@ int main(int argc, const char* argv[])
     ui.EngineEmitCreateEntityEventCallback = [&engine](const willengine::EntityCreationData& data) {
         engine.event->EmitEvent<willengine::CreateEntityEvent>(data);
         };
+    ui.EngineEmitSaveEntityCallback = [&engine](const willengine::EntitySaveData& saveData) {
+        engine.event->EmitEvent<willengine::SaveEntityToConfigFileEvent>(saveData);
+        };
 
     engine.RunEditorLoop(
-        [&]() {
+        [&]() 
+        {
             engine.physics->Update();
             ui.Update();
         },

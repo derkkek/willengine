@@ -9,6 +9,8 @@
 #include "../Types.h"          
 #include "../ECS/ECS.h"    
 #include "../Events/CreateEntityEvent.h"
+#include "../Events/SaveEntityToConfigFileEvent.h"
+#include <fstream>
 
 namespace willengine
 {
@@ -265,9 +267,91 @@ namespace willengine
         spdlog::info("Entity created via CreateEntityEvent");
     }
 
+    void SceneManager::OnSaveEntityToConfig(SaveEntityToConfigFileEvent& event)
+    {
+        const EntitySaveData& data = event.saveData;
+
+        std::string configPath = engine->resource->ResolvePath("scripts/config/scene_config.lua");
+
+        // Read existing file
+        std::ifstream inFile(configPath);
+        std::stringstream buffer;
+        buffer << inFile.rdbuf();
+        std::string content = buffer.str();
+        inFile.close();
+
+        // Find the position to insert (before the last closing braces of entities table)
+        // Look for the pattern "    }\n\n    }" or similar at the end
+        size_t insertPos = content.rfind("\n    }");  // Find last "    }" (end of entities)
+
+        if (insertPos == std::string::npos) {
+            spdlog::error("Could not find insertion point in scene_config.lua");
+            return;
+        }
+
+        // Build new entity Lua string
+        std::stringstream entityLua;
+        entityLua << ",\n";  // comma after previous entity
+        entityLua << "        {\n";
+        entityLua << "            id = {entityID = \"" << data.entityID << "\"},\n";
+        entityLua << "\n";
+        entityLua << "            components = {\n";
+
+        if (data.transform.has_value()) {
+            entityLua << "                transform = {x = " << data.transform->x
+                << " , y = " << data.transform->y << "},\n";
+        }
+
+        if (data.rigidbody.has_value()) {
+            entityLua << "                rigidbody = {x = " << data.rigidbody->position.x
+                << ", y = " << data.rigidbody->position.y
+                << ", x_vel = " << data.rigidbody->velocity.x
+                << ", y_vel = " << data.rigidbody->velocity.y << "},\n";
+        }
+
+        if (data.sprite.has_value()) {
+            entityLua << "                sprite = {sprite_id = \"" << data.sprite->image
+                << "\", sprite_alpha = " << data.sprite->alpha
+                << ", width = " << data.sprite->scale.x
+                << ", height = " << data.sprite->scale.y << "},\n";
+        }
+
+        if (data.boxCollider.has_value()) {
+            entityLua << "                box_collider = {width = " << data.boxCollider->dimensionSizes.x
+                << ", height = " << data.boxCollider->dimensionSizes.y
+                << ", isCollided = false},\n";
+        }
+
+        if (data.health.has_value()) {
+            entityLua << "                health = {amount = " << data.health->percent << "},\n";
+        }
+
+        if (data.script.has_value() && !data.script->name.empty()) {
+            entityLua << "                script = {name = \"" << data.script->name << "\"}\n";
+        }
+
+        entityLua << "            }\n";
+        entityLua << "        }";
+
+        // Insert the new entity
+        content.insert(insertPos, entityLua.str());
+
+        // Write back to file
+        std::ofstream outFile(configPath);
+        if (!outFile.is_open()) {
+            spdlog::error("Failed to open scene_config.lua for writing");
+            return;
+        }
+        outFile << content;
+        outFile.close();
+
+        spdlog::info("Saved entity '{}' to scene_config.lua", data.entityID);
+    }
+
     void SceneManager::SubscribeToEvents()
     {
         engine->event->SubscribeToEvent<CreateEntityEvent>(this, &SceneManager::OnCreateEntity);
+        engine->event->SubscribeToEvent<SaveEntityToConfigFileEvent>(this, &SceneManager::OnSaveEntityToConfig);
     }
 
 
