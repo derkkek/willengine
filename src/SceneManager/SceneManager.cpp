@@ -7,11 +7,12 @@
 #include <spdlog/spdlog.h>
 #include <filesystem>          
 #include "../Types.h"          
-#include "../ECS/ECS.h"        
+#include "../ECS/ECS.h"    
+#include "../Events/CreateEntityEvent.h"
 
 namespace willengine
 {
-	willengine::SceneManager::SceneManager(Engine* engine)
+	SceneManager::SceneManager(Engine* engine)
 		:engine(engine)
 	{
 	}
@@ -205,8 +206,74 @@ namespace willengine
         return true;
     }
 
+    void SceneManager::OnCreateEntity(CreateEntityEvent& event)
+    {
+        const EntityCreationData& data = event.entityData;
+
+        // Create the entity
+        entityID entity = engine->ecs.Create();
+
+        // Register entity name in Lua if provided
+        if (!data.entityID.empty()) {
+            engine->script->lua[data.entityID] = entity;
+            spdlog::info("Created entity '{}' with ID {}", data.entityID, entity);
+        }
+
+        // Add Transform component
+        if (data.transform.has_value()) {
+            Transform& transform = engine->ecs.Get<Transform>(entity);
+            transform.x = data.transform->x;
+            transform.y = data.transform->y;
+        }
+
+        // Add Rigidbody component
+        if (data.rigidbody.has_value()) {
+            Rigidbody& rb = engine->ecs.Get<Rigidbody>(entity);
+            rb.position = data.rigidbody->position;
+            rb.velocity = data.rigidbody->velocity;
+        }
+
+        // Add Sprite component
+        if (data.sprite.has_value()) {
+            Sprite& sprite = engine->ecs.Get<Sprite>(entity);
+            sprite.image = data.sprite->image;
+            sprite.alpha = data.sprite->alpha;
+            sprite.scale = data.sprite->scale;
+        }
+
+        // Add BoxCollider component
+        if (data.boxCollider.has_value()) {
+            BoxCollider& collider = engine->ecs.Get<BoxCollider>(entity);
+            collider.dimensionSizes = data.boxCollider->dimensionSizes;
+            collider.isCollided = false;
+        }
+
+        // Add Health component
+        if (data.health.has_value()) {
+            Health& health = engine->ecs.Get<Health>(entity);
+            health.percent = data.health.value().percent;
+        }
+
+        // Add Script component
+        if (data.script.has_value()) {
+            Script& script = engine->ecs.Get<Script>(entity);
+            script.name = data.script.value().name;
+            engine->script->InitializeEntityScript(entity, script.name);
+            spdlog::info("Attached script '{}' to entity", script.name);
+        }
+
+        spdlog::info("Entity created via CreateEntityEvent");
+    }
+
+    void SceneManager::SubscribeToEvents()
+    {
+        engine->event->SubscribeToEvent<CreateEntityEvent>(this, &SceneManager::OnCreateEntity);
+    }
+
+
     void SceneManager::Startup()
     {
+        SubscribeToEvents();
         LoadScripts();
         LoadSounds();
         LoadSprites();

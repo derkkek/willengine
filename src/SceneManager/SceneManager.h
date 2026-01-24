@@ -5,6 +5,7 @@
 namespace willengine
 {
 	class Engine;
+	class CreateEntityEvent;
 	class SceneManager
 	{
 	public:
@@ -16,6 +17,10 @@ namespace willengine
 		void LoadSounds();
 		void LoadSprites();
 		bool CreateGameEntititesWComponents(const std::string& path);
+
+		void SubscribeToEvents();
+		void OnCreateEntity(CreateEntityEvent& event);
+
 
 	private:
 		Engine* engine;

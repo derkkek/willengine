@@ -4,6 +4,7 @@
 #include "PhysicsManager/PhysicsManager.h"
 #include "States.h"
 #include <iostream>
+#include <Events/CreateEntityEvent.h>
 
 
 
@@ -14,6 +15,10 @@ int main(int argc, const char* argv[])
     willeditor::UI ui{};
 
     ui.Startup(engine.graphics->GetWindow(), engine.graphics->GetDevice(), engine.graphics->GetSurfaceFormat());
+
+    ui.EngineEmitCreateEntityEventCallback = [&engine](const willengine::EntityCreationData& data) {
+        engine.event->EmitEvent<willengine::CreateEntityEvent>(data);
+        };
 
     engine.RunEditorLoop(
         [&]() {

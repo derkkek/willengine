@@ -1,46 +1,38 @@
 #pragma once
 #include "EventManager/EventManager.h"
 #include "Engine.h"
+#include <string>
+#include <optional>
 namespace willengine
 {
-	class CreateEntityEvent : public event
-	{
-	public:
-		CreateEntityEvent();
+    struct EntityCreationData
+    {
+        std::string entityID;
 
-		struct EntityData
-		{
-            char entityID[128] = "";
+        // Optional components - use std::optional to indicate presence
+        std::optional<vec2> transform;
 
-            // Component flags (which components to include)
-            bool hasTransform = true;
-            bool hasRigidbody = false;
-            bool hasSprite = false;
-            bool hasBoxCollider = false;
-            bool hasHealth = false;
-            bool hasScript = false;
+        std::optional<Rigidbody> rigidbody;
 
-            // Transform
-            float transformX = 0.0f;
-            float transformY = 0.0f;
+        std::optional<Sprite> sprite;
 
-            // Rigidbody
-            float rbPosX = 0.0f, rbPosY = 0.0f;
-            float rbVelX = 0.0f, rbVelY = 0.0f;
+        std::optional<BoxCollider> boxCollider;
 
-            // Sprite
-            char spriteID[128] = "";
-            float spriteAlpha = 1.0f;
-            float spriteWidth = 20.0f, spriteHeight = 20.0f;
+        std::optional<Health> health;
 
-            // BoxCollider
-            float colliderWidth = 20.0f, colliderHeight = 20.0f;
+        std::optional<Script> script;
+    };
 
-            // Health
-            float healthAmount = 100.0f;
+    class CreateEntityEvent : public Event
+    {
 
-            // Script
-            char scriptName[256] = "";
-		};
-	};
+    public:
+        CreateEntityEvent(const EntityCreationData& data)
+            : entityData(data)
+        {
+        }
+
+        EntityCreationData entityData;
+    };
+  
 }

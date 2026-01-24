@@ -3,7 +3,7 @@
 #include <typeindex>
 #include <functional>
 #include <list>
-
+#include <memory>
 namespace willengine
 {
     class Event 

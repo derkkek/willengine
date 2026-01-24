@@ -2,6 +2,10 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_wgpu.h"
+#include <Events/CreateEntityEvent.h>
+#include "Types.h"
+#include <spdlog/spdlog.h>
+#include <cassert>
 namespace willeditor
 {
     EntityEditorState UI::g_entityEditor;
@@ -133,11 +137,58 @@ namespace willeditor
         ImGui::Separator();
 
         //// Action buttons
-        //if (ImGui::Button("Create Entity"))
-        //{
-        //    // Add to scene (in-memory)
-        //    CreateEntityFromEditor();
-        //}
+        if (ImGui::Button("Create Entity"))
+        {
+            // Add to scene (in-memory)
+            willengine::EntityCreationData data;
+            data.entityID = g_entityEditor.entityID;
+
+            if (g_entityEditor.hasTransform) 
+            {
+                data.transform = willengine::vec2(g_entityEditor.transformX, g_entityEditor.transformY);
+            }
+
+            if (g_entityEditor.hasRigidbody) 
+            {
+                data.rigidbody = willengine::Rigidbody(
+                    willengine::vec2(g_entityEditor.rbPosX, g_entityEditor.rbPosY),
+                    willengine::vec2(g_entityEditor.rbVelX, g_entityEditor.rbVelY)
+                );
+            }
+
+            if (g_entityEditor.hasSprite) 
+            {
+                data.sprite = willengine::Sprite(
+                    g_entityEditor.spriteID,
+                    g_entityEditor.spriteAlpha,
+                    willengine::vec2(g_entityEditor.spriteWidth, g_entityEditor.spriteHeight)
+                );
+            }
+
+            if (g_entityEditor.hasBoxCollider)
+            {
+                data.boxCollider = willengine::BoxCollider(
+                    willengine::vec2(g_entityEditor.colliderWidth, g_entityEditor.colliderHeight),
+                    false
+                );
+            }
+
+            if (g_entityEditor.hasHealth) 
+            {
+                data.health = willengine::Health(static_cast<double>(g_entityEditor.healthAmount));
+            }
+
+            if (g_entityEditor.hasScript) 
+            {
+                willengine::Script scriptComponent;
+                scriptComponent.name = g_entityEditor.scriptName;
+                data.script = scriptComponent;
+            }
+
+            assert(EngineEmitCreateEntityEventCallback && "EngineEmitCreateEntityEventCallback not set!");
+            EngineEmitCreateEntityEventCallback(data);
+
+        }
 
         //ImGui::SameLine();
 
