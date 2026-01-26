@@ -6,13 +6,14 @@
 #include <Events/CreateEntityEvent.h>
 #include <Events/SaveEntityToConfigFileEvent.h>
 #include "../States.h"
+#include "../App.h"
 namespace willeditor
 {
 	class UI
 	{
 		class States;
 	public:
-		UI();
+		UI(App* app);
 		~UI();
 
 		void Startup(GLFWwindow* window, WGPUDevice device, WGPUTextureFormat render_target_format);		
@@ -23,15 +24,10 @@ namespace willeditor
 		void ShowMainToolbar();
 		void ShowEntityCreatorWindow(bool* open);
 
-		std::function<void(const willengine::EntityCreationData&)> EngineEmitCreateEntityEventCallback;
-		std::function<void(const willengine::EntitySaveData&)> EngineEmitSaveEntityCallback;
-		std::function<void()> OnPlayClicked;
-		std::function<void()> OnPauseClicked;
-		std::function<void()> OnStopClicked;
-
 		PlayState GetPlayState() const { return playState; }
 		void SetPlayState(PlayState state) { playState = state; }
 	private:
+		App* app;
 		static willeditor::EntityEditorState g_entityEditor;
 		bool showEntityCreatorWindow;
 		PlayState playState = Stopped;

@@ -4,15 +4,16 @@
 #include "imgui_impl_wgpu.h"
 #include <Events/CreateEntityEvent.h>
 #include <Events/SaveEntityToConfigFileEvent.h>
-#include "Types.h"
+#include "../EventHandler/EventHandler.h"
+
 #include <spdlog/spdlog.h>
 #include <cassert>
 namespace willeditor
 {
     EntityEditorState UI::g_entityEditor;
 
-    UI::UI()
-        :showEntityCreatorWindow(true)
+    UI::UI(App* app)
+        :showEntityCreatorWindow(true), app(app)
     {
     }
     UI::~UI()
@@ -186,8 +187,8 @@ namespace willeditor
                 data.script = scriptComponent;
             }
 
-            assert(EngineEmitCreateEntityEventCallback && "EngineEmitCreateEntityEventCallback not set!");
-            EngineEmitCreateEntityEventCallback(data);
+            assert(app->eventHandler->EngineEmitCreateEntityEventCallback && "EngineEmitCreateEntityEventCallback not set!");
+            app->eventHandler->EngineEmitCreateEntityEventCallback(data);
 
         }
 
@@ -240,8 +241,8 @@ namespace willeditor
                 saveData.script = scriptComponent;
             }
 
-            assert(EngineEmitSaveEntityCallback && "EngineEmitSaveEntityEventCallback not set!");
-            EngineEmitSaveEntityCallback(saveData);
+            assert(app->eventHandler->EngineEmitSaveEntityCallback && "EngineEmitSaveEntityEventCallback not set!");
+            app->eventHandler->EngineEmitSaveEntityCallback(saveData);
         }
 
         //ImGui::SameLine();
@@ -300,7 +301,7 @@ namespace willeditor
                 if (isStopped || isPaused)
                 {
                     playState = PlayState::Playing;
-                    if (OnPlayClicked) OnPlayClicked();
+                    if (app->eventHandler->OnPlayClicked) app->eventHandler->OnPlayClicked();
                 }
             }
 
@@ -325,12 +326,12 @@ namespace willeditor
                 if (isPlaying)
                 {
                     playState = PlayState::Paused;
-                    if (OnPauseClicked) OnPauseClicked();
+                    if (app->eventHandler->OnPauseClicked) app->eventHandler->OnPauseClicked();
                 }
                 else if (isPaused)
                 {
                     playState = PlayState::Playing;
-                    if (OnPlayClicked) OnPlayClicked();
+                    if (app->eventHandler->OnPlayClicked) app->eventHandler->OnPlayClicked();
                 }
             }
             ImGui::EndDisabled();
@@ -347,7 +348,7 @@ namespace willeditor
             if (ImGui::Button("Stop", ImVec2(buttonWidth, 25)))
             {
                 playState = PlayState::Stopped;
-                if (OnStopClicked) OnStopClicked();
+                if (app->eventHandler->OnStopClicked) app->eventHandler->OnStopClicked();
             }
             ImGui::EndDisabled();
         }

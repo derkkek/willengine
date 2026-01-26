@@ -8,47 +8,35 @@
 #include <Events/CreateEntityEvent.h>
 #include <Events/SaveEntityToConfigFileEvent.h>
 #include <spdlog/spdlog.h>
-
+#include "App.h"
+#include "EventHandler/EventHandler.h"
 
 
 int main(int argc, const char* argv[])
 {
     willengine::Engine engine{ willengine::Engine::Config{} };
 
-    willeditor::UI ui{};
+    willeditor::App app;
+    app.Startup(engine.graphics->GetWindow(), engine.graphics->GetDevice(), engine.graphics->GetSurfaceFormat());
 
-    ui.Startup(engine.graphics->GetWindow(), engine.graphics->GetDevice(), engine.graphics->GetSurfaceFormat());
-
-    ui.EngineEmitCreateEntityEventCallback = [&engine](const willengine::EntityCreationData& data) {
-        engine.event->EmitEvent<willengine::CreateEntityEvent>(data);
-        };
-    ui.EngineEmitSaveEntityCallback = [&engine](const willengine::EntitySaveData& saveData) {
-        engine.event->EmitEvent<willengine::SaveEntityToConfigFileEvent>(saveData);
-        };
-
-    ui.OnPlayClicked = [&engine]() {
-        spdlog::info("Play clicked - starting scripts");
-        engine.script->StartAllEntityScripts();
-        };
-
-    ui.OnPauseClicked = [&engine]() {
-        spdlog::info("Pause clicked");
-        };
-
-    ui.OnStopClicked = [&engine]() {
-        spdlog::info("Stop clicked");
-        // Optionally reset scene state here
-        };
+    app.eventHandler->BindEventCallbacks({
+    .onCreateEntity = [&engine](const willengine::EntityCreationData& data) { engine.event->EmitEvent<willengine::CreateEntityEvent>(data); },
+    .onSaveEntity = [&engine](const willengine::EntitySaveData& saveData) { engine.event->EmitEvent<willengine::SaveEntityToConfigFileEvent>(saveData); },
+    .onPlay = [&engine]() { engine.script->StartAllEntityScripts(); },
+    .onPause = [&engine]() { spdlog::info("Pause clicked"); },
+    .onStop = [&engine]() { spdlog::info("Stop clicked"); }
+    //    // Optionally reset scene state here
+        });
 
     engine.RunEditorLoop(
         [&]() 
         {
-            if (ui.GetPlayState() == willeditor::PlayState::Playing)
+            if (app.ui->GetPlayState() == willeditor::PlayState::Playing)
             {
                 engine.script->UpdateAllEntityScripts();
                 engine.physics->Update();
             }
-            ui.Update();
+            app.Update();
         },
         [](WGPURenderPassEncoder render_pass) {
             ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), render_pass);
@@ -56,7 +44,7 @@ int main(int argc, const char* argv[])
     );
 
     
-    ui.Shutdown();
+    app.ui->Shutdown();
     engine.Shutdown();
     return 0;
 }

@@ -173,7 +173,7 @@ add_custom_target( run_helloworld helloworld USES_TERMINAL WORKING_DIRECTORY ${C
 # ============================================
 # EDITOR
 # ============================================
-add_executable(editor Editor/editor.cpp "Editor/UserInterface/UI.cpp")
+add_executable(editor Editor/editor.cpp "Editor/UserInterface/UI.cpp" "Editor/App.cpp" "Editor/EventHandler/EventHandler.cpp")
 set_target_properties(editor PROPERTIES CXX_STANDARD 20)
 target_link_libraries(editor PRIVATE willengine imgui)
 target_compile_definitions(editor PRIVATE WILLENGINE_EDITOR=1)
