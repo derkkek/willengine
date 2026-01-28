@@ -48,6 +48,11 @@ namespace willengine
 
 		std::unordered_map<std::string, sol::protected_function> scripts;
 		std::unordered_map<entityID, sol::table> scriptInstances;
+		
+		// Script isolation: each script gets its own environment
+		std::unordered_map<std::string, sol::environment> scriptEnvironments;
+		// Track which script name each entity uses
+		std::unordered_map<entityID, std::string> entityScriptNames;
 	};
 
 }

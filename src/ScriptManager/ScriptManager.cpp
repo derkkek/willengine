@@ -348,26 +348,45 @@ namespace willengine
     }
 
     void ScriptManager::InitializeEntityScript(entityID entity, const std::string& scriptName) {
+        // Create isolated environment for this script if not already created
+        if (scriptEnvironments.find(scriptName) == scriptEnvironments.end()) {
+            // Create environment that inherits from globals (so ECS, Input, etc. are accessible)
+            sol::environment env(lua, sol::create, lua.globals());
+            
+            // Load and run the script file INTO this isolated environment
+            std::string scriptPath = engine->resource->ResolvePath("scripts/" + scriptName + ".lua");
+            lua.script_file(scriptPath, env);
+            
+            scriptEnvironments[scriptName] = env;
+            spdlog::info("Loaded script '{}' into isolated environment", scriptName);
+        }
+
         // Create a unique table for this entity's script instance
         sol::table instance = lua.create_table();
         instance["entity"] = entity;  // Script can access its own entity
 
-        // Store the instance
+        // Store the instance and remember which script this entity uses
         scriptInstances[entity] = instance;
-
-        // Load and run the script file to define functions (if not already loaded)
-        std::string scriptPath = engine->resource->ResolvePath("scripts/" + scriptName + ".lua");
-        lua.script_file(scriptPath);
+        entityScriptNames[entity] = scriptName;
     }
 
     void ScriptManager::CallEntityFunction(entityID entity, const std::string& functionName) {
-        auto it = scriptInstances.find(entity);
-        if (it == scriptInstances.end()) return;
+        auto instanceIt = scriptInstances.find(entity);
+        if (instanceIt == scriptInstances.end()) return;
 
-        sol::table& instance = it->second;
+        auto scriptNameIt = entityScriptNames.find(entity);
+        if (scriptNameIt == entityScriptNames.end()) return;
 
-        // Get the function from global state
-        sol::optional<sol::protected_function> func = lua[functionName];
+        sol::table& instance = instanceIt->second;
+        const std::string& scriptName = scriptNameIt->second;
+
+        // Get the environment for this script
+        auto envIt = scriptEnvironments.find(scriptName);
+        if (envIt == scriptEnvironments.end()) return;
+
+        // Get the function from this script's isolated environment (not global!)
+        sol::environment& env = envIt->second;
+        sol::optional<sol::protected_function> func = env[functionName];
         if (func) {
             sol::protected_function_result result = (*func)(instance);
             if (!result.valid()) {
@@ -526,6 +545,10 @@ namespace willengine
 
     void ScriptManager::Shutdown()
     {
-
+        // Clear all script-related data
+        scriptInstances.clear();
+        entityScriptNames.clear();
+        scriptEnvironments.clear();
+        scripts.clear();
     }
 }
