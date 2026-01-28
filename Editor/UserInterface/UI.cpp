@@ -49,6 +49,8 @@ namespace willeditor
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ShowMainToolbar();
+        ShowEntitiesList(&showHierarchyWindow);
+        ShowEntityComponents(&showInspectorWindow);
         ShowEntityCreatorWindow(&showEntityCreatorWindow);
 
         ImGui::Render();
@@ -196,51 +198,6 @@ namespace willeditor
 
         if (ImGui::Button("Save Scene"))
         {
-            //willengine::EntitySaveData saveData;
-            //saveData.entityID = g_entityEditor.entityID;
-
-            //if (g_entityEditor.hasTransform)
-            //{
-            //    saveData.transform = willengine::vec2(g_entityEditor.transformX, g_entityEditor.transformY);
-            //}
-
-            //if (g_entityEditor.hasRigidbody)
-            //{
-            //    saveData.rigidbody = willengine::Rigidbody(
-            //        willengine::vec2(g_entityEditor.rbPosX, g_entityEditor.rbPosY),
-            //        willengine::vec2(g_entityEditor.rbVelX, g_entityEditor.rbVelY)
-            //    );
-            //}
-
-            //if (g_entityEditor.hasSprite)
-            //{
-            //    saveData.sprite = willengine::Sprite(
-            //        g_entityEditor.spriteID,
-            //        g_entityEditor.spriteAlpha,
-            //        willengine::vec2(g_entityEditor.spriteWidth, g_entityEditor.spriteHeight)
-            //    );
-            //}
-
-            //if (g_entityEditor.hasBoxCollider)
-            //{
-            //    saveData.boxCollider = willengine::BoxCollider(
-            //        willengine::vec2(g_entityEditor.colliderWidth, g_entityEditor.colliderHeight),
-            //        false
-            //    );
-            //}
-
-            //if (g_entityEditor.hasHealth)
-            //{
-            //    saveData.health = willengine::Health(static_cast<double>(g_entityEditor.healthAmount));
-            //}
-
-            //if (g_entityEditor.hasScript)
-            //{
-            //    willengine::Script scriptComponent;
-            //    scriptComponent.name = g_entityEditor.scriptName;
-            //    saveData.script = scriptComponent;
-            //}
-
             assert(app->eventHandler->EngineEmitSaveSceneCallback && "EngineEmitSaveSceneCallback not set!");
             app->eventHandler->EngineEmitSaveSceneCallback();
         }
@@ -255,6 +212,290 @@ namespace willeditor
         ImGui::End();
     }
 
+    void UI::ShowEntitiesList(bool* open)
+    {
+        ImGui::SetNextWindowSize(ImVec2(250, 400), ImGuiCond_FirstUseEver);
+
+        if (!ImGui::Begin("Hierarchy", open))
+        {
+            ImGui::End();
+            return;
+        }
+
+        // Header with entity count
+        ImGui::Text("Scene Entities (%zu)", entities.size());
+        ImGui::Separator();
+
+        // Search filter (optional but nice to have)
+        static char searchFilter[128] = "";
+        ImGui::InputTextWithHint("##search", "Search...", searchFilter, IM_ARRAYSIZE(searchFilter));
+        ImGui::Separator();
+
+        // Entity list
+        for (const auto& entity : entities)
+        {
+            // Apply search filter
+            if (strlen(searchFilter) > 0)
+            {
+                if (entity.name.find(searchFilter) == std::string::npos)
+                    continue;
+            }
+
+            // Create a selectable item for each entity
+            bool isSelected = (selectedEntityName == entity.name);
+
+            // Build a label showing entity name and icon hints
+            std::string label = entity.name;
+
+            // Use tree node for expandable view, or Selectable for flat list
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf |
+                ImGuiTreeNodeFlags_SpanAvailWidth |
+                ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+            if (isSelected)
+                flags |= ImGuiTreeNodeFlags_Selected;
+
+            // Add small icons/hints for components
+            ImGui::PushID(entity.name.c_str());
+
+            if (ImGui::TreeNodeEx(label.c_str(), flags))
+            {
+                // Handle selection
+                if (ImGui::IsItemClicked())
+                {
+                    selectedEntityName = entity.name;
+                }
+            }
+
+            // Right-click context menu
+            if (ImGui::BeginPopupContextItem())
+            {
+                if (ImGui::MenuItem("Delete Entity"))
+                {
+                    // TODO: Emit delete entity event
+                    spdlog::info("Delete requested for: {}", entity.name);
+                }
+                if (ImGui::MenuItem("Duplicate"))
+                {
+                    // TODO: Emit duplicate entity event
+                }
+                ImGui::EndPopup();
+            }
+
+            // Tooltip showing components
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::Text("ID: %ld", entity.id);
+                ImGui::Text("Components:");
+                if (entity.hasTransform)   ImGui::BulletText("Transform");
+                if (entity.hasRigidbody)   ImGui::BulletText("Rigidbody");
+                if (entity.hasSprite)      ImGui::BulletText("Sprite");
+                if (entity.hasBoxCollider) ImGui::BulletText("BoxCollider");
+                if (entity.hasHealth)      ImGui::BulletText("Health");
+                if (entity.hasScript)      ImGui::BulletText("Script");
+                ImGui::EndTooltip();
+            }
+
+            ImGui::PopID();
+        }
+
+        ImGui::End();
+    }
+    void UI::ShowEntityComponents(bool* open)
+    {
+        ImGui::SetNextWindowSize(ImVec2(300, 500), ImGuiCond_FirstUseEver);
+
+        if (!ImGui::Begin("Inspector", open))
+        {
+            ImGui::End();
+            return;
+        }
+
+        if (selectedEntityName.empty())
+        {
+            ImGui::TextDisabled("No entity selected");
+            ImGui::TextDisabled("Select an entity from the Hierarchy");
+            ImGui::End();
+            return;
+        }
+
+        // Find the selected entity (get non-const pointer so we can edit)
+        EntityDisplayInfo* selected = nullptr;
+        for (auto& e : entities)
+        {
+            if (e.name == selectedEntityName)
+            {
+                selected = &e;
+                break;
+            }
+        }
+
+        if (!selected)
+        {
+            selectedEntityName = "";  // Clear invalid selection
+            ImGui::TextDisabled("Entity not found");
+            ImGui::End();
+            return;
+        }
+
+        // Entity header
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
+        ImGui::Text("%s", selected->name.c_str());
+        ImGui::PopStyleColor();
+        ImGui::SameLine();
+        ImGui::TextDisabled("(ID: %ld)", selected->id);
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // ==================== TRANSFORM ====================
+        if (selected->hasTransform)
+        {
+            if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::Indent();
+
+                float pos[2] = { selected->transformX, selected->transformY };
+                if (ImGui::DragFloat2("Position", pos, 0.1f))
+                {
+                    selected->transformX = pos[0];
+                    selected->transformY = pos[1];
+
+                    // Notify engine of change
+                    assert(app->eventHandler->OnModifyTransform);
+                    app->eventHandler->OnModifyTransform(selected->name, pos[0], pos[1]);
+                }
+
+                ImGui::Unindent();
+            }
+        }
+
+        // ==================== RIGIDBODY ====================
+        if (selected->hasRigidbody)
+        {
+            if (ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::Indent();
+
+                float rbPos[2] = { selected->rbPosX, selected->rbPosY };
+                if (ImGui::DragFloat2("Position##rb", rbPos, 0.1f))
+                {
+                    selected->rbPosX = rbPos[0];
+                    selected->rbPosY = rbPos[1];
+
+                    assert(app->eventHandler->OnModifyRigidbody);
+                    
+                    app->eventHandler->OnModifyRigidbody(selected->name, rbPos[0], rbPos[1],
+                            selected->rbVelX, selected->rbVelY);
+                    
+                }
+
+                float rbVel[2] = { selected->rbVelX, selected->rbVelY };
+                if (ImGui::DragFloat2("Velocity##rb", rbVel, 0.01f))
+                {
+                    selected->rbVelX = rbVel[0];
+                    selected->rbVelY = rbVel[1];
+
+                    app->eventHandler->OnModifyRigidbody(selected->name, selected->rbPosX, selected->rbPosY,
+                            rbVel[0], rbVel[1]);
+                }
+
+                ImGui::Unindent();
+            }
+        }
+
+        // ==================== SPRITE ====================
+        if (selected->hasSprite)
+        {
+            if (ImGui::CollapsingHeader("Sprite", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::Indent();
+
+                // Sprite image (read-only display, or use dropdown for available sprites)
+                ImGui::Text("Image: %s", selected->spriteImage.c_str());
+
+                // Alpha slider
+                if (ImGui::SliderFloat("Alpha", &selected->spriteAlpha, 0.0f, 1.0f))
+                {
+                    assert(app->eventHandler->OnModifySprite);
+                        app->eventHandler->OnModifySprite(selected->name, selected->spriteImage,
+                            selected->spriteAlpha,
+                            selected->spriteScaleX, selected->spriteScaleY);
+                }
+
+                // Scale
+                float scale[2] = { selected->spriteScaleX, selected->spriteScaleY };
+                if (ImGui::DragFloat2("Scale", scale, 0.5f, 1.0f, 1000.0f))
+                {
+                    selected->spriteScaleX = scale[0];
+                    selected->spriteScaleY = scale[1];
+
+                    assert(app->eventHandler->OnModifySprite);
+                    app->eventHandler->OnModifySprite(selected->name, selected->spriteImage,
+                            selected->spriteAlpha, scale[0], scale[1]);
+                }
+
+                ImGui::Unindent();
+            }
+        }
+
+        // ==================== BOX COLLIDER ====================
+        if (selected->hasBoxCollider)
+        {
+            if (ImGui::CollapsingHeader("Box Collider", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::Indent();
+
+                float size[2] = { selected->colliderWidth, selected->colliderHeight };
+                if (ImGui::DragFloat2("Size", size, 0.5f, 1.0f, 1000.0f))
+                {
+                    selected->colliderWidth = size[0];
+                    selected->colliderHeight = size[1];
+
+                    assert(app->eventHandler->OnModifyBoxCollider);
+                    app->eventHandler->OnModifyBoxCollider(selected->name, size[0], size[1]);
+                }
+
+                ImGui::Unindent();
+            }
+        }
+
+        // ==================== HEALTH ====================
+        if (selected->hasHealth)
+        {
+            if (ImGui::CollapsingHeader("Health", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::Indent();
+
+                if (ImGui::DragFloat("Amount", &selected->healthAmount, 1.0f, 0.0f, 10000.0f))
+                {
+                    assert(app->eventHandler->OnModifyHealth);
+                    app->eventHandler->OnModifyHealth(selected->name, selected->healthAmount);
+                }
+
+                // Visual health bar
+                ImGui::ProgressBar(selected->healthAmount / 100.0f, ImVec2(-1, 0), "");
+
+                ImGui::Unindent();
+            }
+        }
+
+        // ==================== SCRIPT ====================
+        if (selected->hasScript)
+        {
+            if (ImGui::CollapsingHeader("Script", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::Indent();
+
+                ImGui::Text("Script: %s", selected->scriptName.c_str());
+                // Scripts are typically not edited at runtime, just displayed
+
+                ImGui::Unindent();
+            }
+        }
+
+        ImGui::End();
+    }
     void UI::ShowMainToolbar()
     {
         // Create a toolbar window at the top

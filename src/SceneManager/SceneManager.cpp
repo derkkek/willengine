@@ -19,6 +19,91 @@ namespace willengine
 	{
 	}
 
+    void SceneManager::ModifyTransform(const std::string& entityName, float x, float y)
+    {
+        auto it = namedEntities.find(entityName);
+        if (it == namedEntities.end()) {
+            spdlog::warn("ModifyTransform: Entity '{}' not found", entityName);
+            return;
+        }
+
+        Transform& t = engine->ecs.Get<Transform>(it->second);
+        t.x = x;
+        t.y = y;
+        MarkDirty();
+    }
+
+    void SceneManager::ModifyRigidbody(const std::string& entityName, float posX, float posY, float velX, float velY)
+    {
+        auto it = namedEntities.find(entityName);
+        if (it == namedEntities.end()) {
+            spdlog::warn("ModifyRigidbody: Entity '{}' not found", entityName);
+            return;
+        }
+
+        Rigidbody& rb = engine->ecs.Get<Rigidbody>(it->second);
+        rb.position = vec2(posX, posY);
+        rb.velocity = vec2(velX, velY);
+        MarkDirty();
+    }
+
+    void SceneManager::ModifySprite(const std::string& entityName, const std::string& image, float alpha, float scaleX, float scaleY)
+    {
+        auto it = namedEntities.find(entityName);
+        if (it == namedEntities.end()) {
+            spdlog::warn("ModifySprite: Entity '{}' not found", entityName);
+            return;
+        }
+
+        Sprite& s = engine->ecs.Get<Sprite>(it->second);
+        s.image = image;
+        s.alpha = alpha;
+        s.scale = vec2(scaleX, scaleY);
+        MarkDirty();
+    }
+
+    void SceneManager::ModifyBoxCollider(const std::string& entityName, float width, float height)
+    {
+        auto it = namedEntities.find(entityName);
+        if (it == namedEntities.end()) {
+            spdlog::warn("ModifyBoxCollider: Entity '{}' not found", entityName);
+            return;
+        }
+
+        BoxCollider& bc = engine->ecs.Get<BoxCollider>(it->second);
+        bc.dimensionSizes = vec2(width, height);
+        MarkDirty();
+    }
+
+    void SceneManager::ModifyHealth(const std::string& entityName, float amount)
+    {
+        auto it = namedEntities.find(entityName);
+        if (it == namedEntities.end()) {
+            spdlog::warn("ModifyHealth: Entity '{}' not found", entityName);
+            return;
+        }
+
+        Health& h = engine->ecs.Get<Health>(it->second);
+        h.percent = static_cast<double>(amount);
+        MarkDirty();
+    }
+
+    void SceneManager::ModifyScript(const std::string& entityName, const std::string& scriptName)
+    {
+        auto it = namedEntities.find(entityName);
+        if (it == namedEntities.end()) {
+            spdlog::warn("ModifyScript: Entity '{}' not found", entityName);
+            return;
+        }
+
+        Script& script = engine->ecs.Get<Script>(it->second);
+        script.name = scriptName;
+
+        // Optionally reinitialize the script
+        // engine->script->InitializeEntityScript(it->second, scriptName);
+        MarkDirty();
+    }
+
     void SceneManager::LoadScripts()
     {
         std::string scriptsDir = engine->resource->ResolvePath("scripts");
@@ -265,7 +350,7 @@ namespace willengine
             engine->script->InitializeEntityScript(entity, script.name);
             spdlog::info("Attached script '{}' to entity", script.name);
         }
-
+        MarkDirty();
         spdlog::info("Entity created via CreateEntityEvent");
     }
 
