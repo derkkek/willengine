@@ -10,7 +10,7 @@ namespace willeditor
 	void EventHandler::BindEventCallbacks(EventCallbacks&& callbacks)
 	{
 		EngineEmitCreateEntityEventCallback = std::move(callbacks.onCreateEntity);
-		EngineEmitSaveEntityCallback = std::move(callbacks.onSaveEntity);
+		EngineEmitSaveSceneCallback = std::move(callbacks.onSaveScene);
 		OnPlayClicked = std::move(callbacks.onPlay);
 		OnPauseClicked = std::move(callbacks.onPause);
 		OnStopClicked = std::move(callbacks.onStop);

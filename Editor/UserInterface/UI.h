@@ -4,7 +4,7 @@
 #include "../States.h"
 #include <functional>                    
 #include <Events/CreateEntityEvent.h>
-#include <Events/SaveEntityToConfigFileEvent.h>
+#include <Events/SaveSceneEvent.h>
 #include "../States.h"
 #include "../App.h"
 namespace willeditor

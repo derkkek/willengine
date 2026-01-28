@@ -9,7 +9,7 @@
 #include "../Types.h"          
 #include "../ECS/ECS.h"    
 #include "../Events/CreateEntityEvent.h"
-#include "../Events/SaveEntityToConfigFileEvent.h"
+#include "../Events/SaveSceneEvent.h"
 #include <fstream>
 
 namespace willengine
@@ -146,6 +146,7 @@ namespace willengine
                 std::string entityName = idOpt->get_or<std::string>("entityID", "");
                 if (!entityName.empty()) {
                     engine->script->lua[entityName] = entity;  // Makes "player" available in Lua
+                    namedEntities[entityName] = entity;
                     spdlog::info("Registered entity '{}' with ID {}", entityName, entity);
                 }
             }
@@ -218,6 +219,7 @@ namespace willengine
         // Register entity name in Lua if provided
         if (!data.entityID.empty()) {
             engine->script->lua[data.entityID] = entity;
+            namedEntities[data.entityID] = entity;
             spdlog::info("Created entity '{}' with ID {}", data.entityID, entity);
         }
 
@@ -267,91 +269,111 @@ namespace willengine
         spdlog::info("Entity created via CreateEntityEvent");
     }
 
-    void SceneManager::OnSaveEntityToConfig(SaveEntityToConfigFileEvent& event)
+    void SceneManager::OnSaveScene(SaveSceneEvent& event)
     {
-        const EntitySaveData& data = event.saveData;
+        // 1. Open the file (this OVERWRITES the existing file)
+        std::string resolvedPath = engine->resource->ResolvePath("scripts/config/scene_config.lua");
+        std::ofstream file(resolvedPath);
 
-        std::string configPath = engine->resource->ResolvePath("scripts/config/scene_config.lua");
-
-        // Read existing file
-        std::ifstream inFile(configPath);
-        std::stringstream buffer;
-        buffer << inFile.rdbuf();
-        std::string content = buffer.str();
-        inFile.close();
-
-        // Find the position to insert (before the last closing braces of entities table)
-        // Look for the pattern "    }\n\n    }" or similar at the end
-        size_t insertPos = content.rfind("\n    }");  // Find last "    }" (end of entities)
-
-        if (insertPos == std::string::npos) {
-            spdlog::error("Could not find insertion point in scene_config.lua");
-            return;
-        }
-
-        // Build new entity Lua string
-        std::stringstream entityLua;
-        entityLua << ",\n";  // comma after previous entity
-        entityLua << "        {\n";
-        entityLua << "            id = {entityID = \"" << data.entityID << "\"},\n";
-        entityLua << "\n";
-        entityLua << "            components = {\n";
-
-        if (data.transform.has_value()) {
-            entityLua << "                transform = {x = " << data.transform->x
-                << " , y = " << data.transform->y << "},\n";
-        }
-
-        if (data.rigidbody.has_value()) {
-            entityLua << "                rigidbody = {x = " << data.rigidbody->position.x
-                << ", y = " << data.rigidbody->position.y
-                << ", x_vel = " << data.rigidbody->velocity.x
-                << ", y_vel = " << data.rigidbody->velocity.y << "},\n";
-        }
-
-        if (data.sprite.has_value()) {
-            entityLua << "                sprite = {sprite_id = \"" << data.sprite->image
-                << "\", sprite_alpha = " << data.sprite->alpha
-                << ", width = " << data.sprite->scale.x
-                << ", height = " << data.sprite->scale.y << "},\n";
-        }
-
-        if (data.boxCollider.has_value()) {
-            entityLua << "                box_collider = {width = " << data.boxCollider->dimensionSizes.x
-                << ", height = " << data.boxCollider->dimensionSizes.y
-                << ", isCollided = false},\n";
-        }
-
-        if (data.health.has_value()) {
-            entityLua << "                health = {amount = " << data.health->percent << "},\n";
-        }
-
-        if (data.script.has_value() && !data.script->name.empty()) {
-            entityLua << "                script = {name = \"" << data.script->name << "\"}\n";
-        }
-
-        entityLua << "            }\n";
-        entityLua << "        }";
-
-        // Insert the new entity
-        content.insert(insertPos, entityLua.str());
-
-        // Write back to file
-        std::ofstream outFile(configPath);
-        if (!outFile.is_open()) {
+        if (!file.is_open()) {
             spdlog::error("Failed to open scene_config.lua for writing");
             return;
         }
-        outFile << content;
-        outFile.close();
 
-        spdlog::info("Saved entity '{}' to scene_config.lua", data.entityID);
+        // 2. Write the opening structure
+        file << "Scene = {\n";
+        file << "    entities = {\n";
+
+        // 3. Loop through EVERY entity currently in your ECS
+        bool firstEntity = true;
+        for (auto& [name, entityId] : namedEntities) {
+
+            // Add comma between entities (but not before the first one)
+            if (!firstEntity) {
+                file << ",\n";
+            }
+            firstEntity = false;
+
+            // 4. Write this entity's data
+            file << "        {\n";
+            file << "            id = {entityID = \"" << name << "\"},\n";
+            file << "\n";
+            file << "            components = {\n";
+
+            // Track if we need commas between components
+            bool firstComponent = true;
+
+            if (engine->ecs.Has<Transform>(entityId)) {
+                if (!firstComponent) file << ",\n";
+                firstComponent = false;
+
+                Transform& t = engine->ecs.Get<Transform>(entityId);
+                file << "                transform = {x = " << t.x << " , y = " << t.y << "}";
+            }
+
+            if (engine->ecs.Has<Rigidbody>(entityId)) {
+                if (!firstComponent) file << ",\n";
+                firstComponent = false;
+
+                Rigidbody& rb = engine->ecs.Get<Rigidbody>(entityId);
+                file << "                rigidbody = {x = " << rb.position.x
+                    << ", y = " << rb.position.y
+                    << ", x_vel = " << rb.velocity.x
+                    << ", y_vel = " << rb.velocity.y << "}";
+            }
+
+            if (engine->ecs.Has<Sprite>(entityId)) {
+                if (!firstComponent) file << ",\n";
+                firstComponent = false;
+
+                Sprite& s = engine->ecs.Get<Sprite>(entityId);
+                file << "                sprite = {sprite_id = \"" << s.image
+                    << "\", sprite_alpha = " << s.alpha
+                    << ", width = " << s.scale.x
+                    << ", height = " << s.scale.y << "}";
+            }
+
+            if (engine->ecs.Has<BoxCollider>(entityId)) {
+                if (!firstComponent) file << ",\n";
+                firstComponent = false;
+
+                BoxCollider& bc = engine->ecs.Get<BoxCollider>(entityId);
+                file << "                box_collider = {width = " << bc.dimensionSizes.x
+                    << ", height = " << bc.dimensionSizes.y
+                    << ", isCollided = false}";
+            }
+
+            if (engine->ecs.Has<Health>(entityId)) {
+                if (!firstComponent) file << ",\n";
+                firstComponent = false;
+
+                Health& h = engine->ecs.Get<Health>(entityId);
+                file << "                health = {amount = " << h.percent << "}";
+            }
+
+            if (engine->ecs.Has<Script>(entityId)) {
+                if (!firstComponent) file << ",\n";
+                firstComponent = false;
+
+                Script& script = engine->ecs.Get<Script>(entityId);
+                file << "                script = {name = \"" << script.name << "\"}";
+            }
+
+            file << "\n";
+            file << "            }\n";
+            file << "        }";
+        }
+
+        file << "\n\n    }\n";
+        file << "}";
+
+        spdlog::info("Scene saved to {}", resolvedPath);
     }
 
     void SceneManager::SubscribeToEvents()
     {
         engine->event->SubscribeToEvent<CreateEntityEvent>(this, &SceneManager::OnCreateEntity);
-        engine->event->SubscribeToEvent<SaveEntityToConfigFileEvent>(this, &SceneManager::OnSaveEntityToConfig);
+        engine->event->SubscribeToEvent<SaveSceneEvent>(this, &SceneManager::OnSaveScene);
     }
 
 

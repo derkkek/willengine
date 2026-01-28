@@ -6,7 +6,7 @@
 #include "States.h"
 #include <iostream>
 #include <Events/CreateEntityEvent.h>
-#include <Events/SaveEntityToConfigFileEvent.h>
+#include <Events/SaveSceneEvent.h>
 #include <spdlog/spdlog.h>
 #include "App.h"
 #include "EventHandler/EventHandler.h"
@@ -21,7 +21,7 @@ int main(int argc, const char* argv[])
 
     app.eventHandler->BindEventCallbacks({
     .onCreateEntity = [&engine](const willengine::EntityCreationData& data) { engine.event->EmitEvent<willengine::CreateEntityEvent>(data); },
-    .onSaveEntity = [&engine](const willengine::EntitySaveData& saveData) { engine.event->EmitEvent<willengine::SaveEntityToConfigFileEvent>(saveData); },
+    .onSaveScene = [&engine]() { engine.event->EmitEvent<willengine::SaveSceneEvent>(); },
     .onPlay = [&engine]() { engine.script->StartAllEntityScripts(); },
     .onPause = [&engine]() { spdlog::info("Pause clicked"); },
     .onStop = [&engine]() { spdlog::info("Stop clicked"); }

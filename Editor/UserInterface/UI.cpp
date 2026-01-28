@@ -3,7 +3,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_wgpu.h"
 #include <Events/CreateEntityEvent.h>
-#include <Events/SaveEntityToConfigFileEvent.h>
+#include <Events/SaveSceneEvent.h>
 #include "../EventHandler/EventHandler.h"
 
 #include <spdlog/spdlog.h>
@@ -194,55 +194,55 @@ namespace willeditor
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Save to Config"))
+        if (ImGui::Button("Save Scene"))
         {
-            willengine::EntitySaveData saveData;
-            saveData.entityID = g_entityEditor.entityID;
+            //willengine::EntitySaveData saveData;
+            //saveData.entityID = g_entityEditor.entityID;
 
-            if (g_entityEditor.hasTransform)
-            {
-                saveData.transform = willengine::vec2(g_entityEditor.transformX, g_entityEditor.transformY);
-            }
+            //if (g_entityEditor.hasTransform)
+            //{
+            //    saveData.transform = willengine::vec2(g_entityEditor.transformX, g_entityEditor.transformY);
+            //}
 
-            if (g_entityEditor.hasRigidbody)
-            {
-                saveData.rigidbody = willengine::Rigidbody(
-                    willengine::vec2(g_entityEditor.rbPosX, g_entityEditor.rbPosY),
-                    willengine::vec2(g_entityEditor.rbVelX, g_entityEditor.rbVelY)
-                );
-            }
+            //if (g_entityEditor.hasRigidbody)
+            //{
+            //    saveData.rigidbody = willengine::Rigidbody(
+            //        willengine::vec2(g_entityEditor.rbPosX, g_entityEditor.rbPosY),
+            //        willengine::vec2(g_entityEditor.rbVelX, g_entityEditor.rbVelY)
+            //    );
+            //}
 
-            if (g_entityEditor.hasSprite)
-            {
-                saveData.sprite = willengine::Sprite(
-                    g_entityEditor.spriteID,
-                    g_entityEditor.spriteAlpha,
-                    willengine::vec2(g_entityEditor.spriteWidth, g_entityEditor.spriteHeight)
-                );
-            }
+            //if (g_entityEditor.hasSprite)
+            //{
+            //    saveData.sprite = willengine::Sprite(
+            //        g_entityEditor.spriteID,
+            //        g_entityEditor.spriteAlpha,
+            //        willengine::vec2(g_entityEditor.spriteWidth, g_entityEditor.spriteHeight)
+            //    );
+            //}
 
-            if (g_entityEditor.hasBoxCollider)
-            {
-                saveData.boxCollider = willengine::BoxCollider(
-                    willengine::vec2(g_entityEditor.colliderWidth, g_entityEditor.colliderHeight),
-                    false
-                );
-            }
+            //if (g_entityEditor.hasBoxCollider)
+            //{
+            //    saveData.boxCollider = willengine::BoxCollider(
+            //        willengine::vec2(g_entityEditor.colliderWidth, g_entityEditor.colliderHeight),
+            //        false
+            //    );
+            //}
 
-            if (g_entityEditor.hasHealth)
-            {
-                saveData.health = willengine::Health(static_cast<double>(g_entityEditor.healthAmount));
-            }
+            //if (g_entityEditor.hasHealth)
+            //{
+            //    saveData.health = willengine::Health(static_cast<double>(g_entityEditor.healthAmount));
+            //}
 
-            if (g_entityEditor.hasScript)
-            {
-                willengine::Script scriptComponent;
-                scriptComponent.name = g_entityEditor.scriptName;
-                saveData.script = scriptComponent;
-            }
+            //if (g_entityEditor.hasScript)
+            //{
+            //    willengine::Script scriptComponent;
+            //    scriptComponent.name = g_entityEditor.scriptName;
+            //    saveData.script = scriptComponent;
+            //}
 
-            assert(app->eventHandler->EngineEmitSaveEntityCallback && "EngineEmitSaveEntityEventCallback not set!");
-            app->eventHandler->EngineEmitSaveEntityCallback(saveData);
+            assert(app->eventHandler->EngineEmitSaveSceneCallback && "EngineEmitSaveSceneCallback not set!");
+            app->eventHandler->EngineEmitSaveSceneCallback();
         }
 
         //ImGui::SameLine();
