@@ -452,6 +452,7 @@ namespace willengine
         file << "\n\n    }\n";
         file << "}";
 
+        SaveSnapshot();
         spdlog::info("Scene saved to {}", resolvedPath);
     }
 
@@ -461,6 +462,111 @@ namespace willengine
         engine->event->SubscribeToEvent<SaveSceneEvent>(this, &SceneManager::OnSaveScene);
     }
 
+    void SceneManager::SaveSnapshot()
+    {
+        playModeSnapshot.entities.clear();
+
+        for (auto& [name, id] : namedEntities)
+        {
+            EntitySnapshot snapshot;
+            snapshot.name = name;
+            snapshot.id = id;
+
+            // Save Transform
+            if (engine->ecs.Has<Transform>(id)) {
+                snapshot.transform = engine->ecs.Get<Transform>(id);
+            }
+
+            // Save Rigidbody
+            if (engine->ecs.Has<Rigidbody>(id)) {
+                snapshot.rigidbody = engine->ecs.Get<Rigidbody>(id);
+            }
+
+            // Save Sprite
+            if (engine->ecs.Has<Sprite>(id)) {
+                snapshot.sprite = engine->ecs.Get<Sprite>(id);
+            }
+
+            // Save BoxCollider
+            if (engine->ecs.Has<BoxCollider>(id)) {
+                snapshot.boxCollider = engine->ecs.Get<BoxCollider>(id);
+            }
+
+            // Save Health
+            if (engine->ecs.Has<Health>(id)) {
+                snapshot.health = engine->ecs.Get<Health>(id);
+            }
+
+            // Save Script
+            if (engine->ecs.Has<Script>(id)) {
+                snapshot.script = engine->ecs.Get<Script>(id);
+            }
+
+            playModeSnapshot.entities.push_back(snapshot);
+        }
+
+        playModeSnapshot.isValid = true;
+        spdlog::info("Scene snapshot saved ({} entities)", playModeSnapshot.entities.size());
+    }
+
+    void SceneManager::RestoreSnapshot()
+    {
+        if (!playModeSnapshot.isValid) {
+            spdlog::warn("No snapshot to restore");
+            return;
+        }
+
+        for (const auto& snapshot : playModeSnapshot.entities)
+        {
+            // Find the entity by name (it should still exist)
+            auto it = namedEntities.find(snapshot.name);
+            if (it == namedEntities.end()) {
+                spdlog::warn("Entity '{}' not found during restore", snapshot.name);
+                continue;
+            }
+
+            entityID id = it->second;
+
+            // Restore Transform
+            if (snapshot.transform.has_value()) {
+                Transform& t = engine->ecs.Get<Transform>(id);
+                t = snapshot.transform.value();
+            }
+
+            // Restore Rigidbody
+            if (snapshot.rigidbody.has_value()) {
+                Rigidbody& rb = engine->ecs.Get<Rigidbody>(id);
+                rb = snapshot.rigidbody.value();
+            }
+
+            // Restore Sprite
+            if (snapshot.sprite.has_value()) {
+                Sprite& s = engine->ecs.Get<Sprite>(id);
+                s = snapshot.sprite.value();
+            }
+
+            // Restore BoxCollider
+            if (snapshot.boxCollider.has_value()) {
+                BoxCollider& bc = engine->ecs.Get<BoxCollider>(id);
+                bc = snapshot.boxCollider.value();
+            }
+
+            // Restore Health
+            if (snapshot.health.has_value()) {
+                Health& h = engine->ecs.Get<Health>(id);
+                h = snapshot.health.value();
+            }
+
+            // Restore Script
+            if (snapshot.script.has_value()) {
+                Script& script = engine->ecs.Get<Script>(id);
+                script = snapshot.script.value();
+            }
+        }
+
+        MarkDirty();  // Update UI with restored values
+        spdlog::info("Scene snapshot restored ({} entities)", playModeSnapshot.entities.size());
+    }
 
     void SceneManager::Startup()
     {

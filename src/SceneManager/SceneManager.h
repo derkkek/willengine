@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <optional>
 #include "../Types.h"
 
 namespace willengine
@@ -9,6 +10,27 @@ namespace willengine
 	class Engine;
 	class CreateEntityEvent;
 	class SaveSceneEvent;
+
+	// Snapshot of a single entity's state (for play/stop functionality)
+	struct EntitySnapshot {
+		std::string name;
+		entityID id;
+
+		// Component data (optional means component may not exist)
+		std::optional<Transform> transform;
+		std::optional<Rigidbody> rigidbody;
+		std::optional<Sprite> sprite;
+		std::optional<BoxCollider> boxCollider;
+		std::optional<Health> health;
+		std::optional<Script> script;
+	};
+
+	// Complete scene snapshot
+	struct SceneSnapshot {
+		std::vector<EntitySnapshot> entities;
+		bool isValid = false;
+	};
+
 	class SceneManager
 	{
 	public:
@@ -39,12 +61,17 @@ namespace willengine
 		bool IsDirty() const { return entityListDirty; }
 		void ClearDirty() { entityListDirty = false; }
 
+		// Play mode snapshot methods
+		void SaveSnapshot();      // Call when Play is clicked
+		void RestoreSnapshot();   // Call when Stop is clicked
+		bool HasSnapshot() const { return playModeSnapshot.isValid; }
 
 	private:
 		Engine* engine;
 		std::unordered_map<std::string, entityID> namedEntities;
 
 		bool entityListDirty = true;
+		SceneSnapshot playModeSnapshot;
 
 		void MarkDirty() { entityListDirty = true; }
 	};

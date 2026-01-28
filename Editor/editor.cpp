@@ -14,7 +14,7 @@
 
 int main(int argc, const char* argv[])
 {
-    willengine::Engine engine{ willengine::Engine::Config{} };
+    willengine::Engine engine{ willengine::Engine::Config{.window_name = "WillEditor"}};
 
     willeditor::App app;
     app.Startup(engine.graphics->GetWindow(), engine.graphics->GetDevice(), engine.graphics->GetSurfaceFormat());
@@ -27,14 +27,16 @@ int main(int argc, const char* argv[])
         engine.event->EmitEvent<willengine::SaveSceneEvent>();
     },
     .onPlay = [&engine]() {
-        spdlog::info("Play clicked - starting scripts");
+        spdlog::info("Play clicked - saving snapshot and starting scripts");
+        engine.scene->SaveSnapshot();  // Save state before playing
         engine.script->StartAllEntityScripts();
     },
     .onPause = []() {
         spdlog::info("Pause clicked");
     },
-    .onStop = []() {
-        spdlog::info("Stop clicked");
+    .onStop = [&engine]() {
+        spdlog::info("Stop clicked - restoring snapshot");
+        engine.scene->RestoreSnapshot();  // Restore state when stopping
     },
         // Clean one-liner calls to SceneManager
         .onModifyTransform = [&engine](const std::string& name, float x, float y) {
