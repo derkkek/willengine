@@ -64,7 +64,7 @@ namespace willeditor
 		void ShowMainToolbar();
 		void ShowEntityCreatorWindow(bool* open);
 		void ShowEntitiesList(bool* open);
-		void ShowEntityComponents(bool* open);
+		void ShowInspectorWindow(bool* open);
 
 		PlayState GetPlayState() const { return playState; }
 		void SetPlayState(PlayState state) { playState = state; }

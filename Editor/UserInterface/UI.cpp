@@ -50,7 +50,7 @@ namespace willeditor
         ImGui::NewFrame();
         ShowMainToolbar();
         ShowEntitiesList(&showHierarchyWindow);
-        ShowEntityComponents(&showInspectorWindow);
+        ShowInspectorWindow(&showInspectorWindow);
         ShowEntityCreatorWindow(&showEntityCreatorWindow);
 
         ImGui::Render();
@@ -68,6 +68,21 @@ namespace willeditor
             ImGui::End();
             return;
         }
+
+        // Check if we're in play mode
+        bool isPlayMode = (playState != PlayState::Stopped);
+
+        // Show warning if in play mode
+        if (isPlayMode)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.8f, 0.2f, 1.0f));
+            ImGui::Text("Disabled during play mode");
+            ImGui::PopStyleColor();
+            ImGui::Separator();
+        }
+
+        // Disable all editing widgets when playing
+        ImGui::BeginDisabled(isPlayMode);
 
         // Entity ID input
         ImGui::SeparatorText("Entity Identity");
@@ -209,6 +224,8 @@ namespace willeditor
         //    g_entityEditor = EntityEditorState{};
         //}
 
+        ImGui::EndDisabled();
+
         ImGui::End();
     }
 
@@ -302,7 +319,7 @@ namespace willeditor
 
         ImGui::End();
     }
-    void UI::ShowEntityComponents(bool* open)
+    void UI::ShowInspectorWindow(bool* open)
     {
         ImGui::SetNextWindowSize(ImVec2(300, 500), ImGuiCond_FirstUseEver);
 
@@ -347,6 +364,22 @@ namespace willeditor
         ImGui::TextDisabled("(ID: %ld)", selected->id);
         ImGui::Separator();
         ImGui::Spacing();
+
+        // Check if we're in play mode
+        bool isPlayMode = (playState != PlayState::Stopped);
+
+        // Show warning if in play mode
+        if (isPlayMode)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.8f, 0.2f, 1.0f));
+            ImGui::Text("Read-only during play mode");
+            ImGui::PopStyleColor();
+            ImGui::Separator();
+            ImGui::Spacing();
+        }
+
+        // Disable all editing widgets when playing
+        ImGui::BeginDisabled(isPlayMode);
 
         // ==================== TRANSFORM ====================
         if (selected->hasTransform)
@@ -493,6 +526,8 @@ namespace willeditor
                 ImGui::Unindent();
             }
         }
+
+        ImGui::EndDisabled();
 
         ImGui::End();
     }
