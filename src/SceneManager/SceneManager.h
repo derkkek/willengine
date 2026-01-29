@@ -61,7 +61,6 @@ namespace willengine
 		bool IsDirty() const { return entityListDirty; }
 		void ClearDirty() { entityListDirty = false; }
 
-		// Play mode snapshot methods
 		void SaveSnapshot();      // Call when Play is clicked
 		void RestoreSnapshot();   // Call when Stop is clicked
 		bool HasSnapshot() const { return playModeSnapshot.isValid; }

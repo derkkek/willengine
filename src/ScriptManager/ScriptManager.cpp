@@ -447,7 +447,6 @@ namespace willengine
             executed_scripts.insert(scriptName);
         }
 
-        // Get the function from Lua global state
         sol::optional<sol::protected_function> func = lua[functionName];
         if (!func) {
             spdlog::error("Function '{}' not found in script '{}'", functionName, scriptName);

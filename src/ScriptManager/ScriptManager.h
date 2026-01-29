@@ -29,10 +29,8 @@ namespace willengine
 
 		bool RunScript(const std::string& name);
 
-		// Call a Lua function with no parameters and no return value
 		bool CallFunction(const std::string& scriptName, const std::string& functionName);
 
-		// Call a Lua function with parameters and get a return value
 		template<typename Ret, typename... Args>
 		sol::optional<Ret> CallFunction(const std::string& scriptName, const std::string& functionName, Args&&... args);
 
