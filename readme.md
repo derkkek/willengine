@@ -8,7 +8,7 @@ For now i don't think i'm gonna improve it further.
 
 ![WillEngine Screenshot](sample.png)
 
-*The following document is written by Claude and i edited in order to keep it here for future reference.*
+*The following document is written by Claude and i edited the output in order to keep it here for future reference.*
 
 
 
